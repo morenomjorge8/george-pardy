@@ -137,20 +137,20 @@
       "retos": [
         {
           "instrucciones": "",
-          "material": "",
-          "nombre": "",
+          "material": "Una pelota",
+          "nombre": "CON",
           "video": ""
         },
         {
           "instrucciones": "",
-          "material": "",
-          "nombre": "",
+          "material": "Una pelota",
+          "nombre": "TRA",
           "video": ""
         },
         {
           "instrucciones": "",
-          "material": "",
-          "nombre": "",
+          "material": "Una pelota",
+          "nombre": "SAL",
           "video": ""
         }
       ]
@@ -244,5 +244,6 @@
       ]
     }
   ],
+  "silabasRespaldo": "PAR, RES",
   "videoTemporizador": "https://www.youtube.com/watch?v=ebvtJCu33vM"
 }

@@ -50,6 +50,25 @@ export function sonido(nombre) {
   else if (nombre === 'beep') { tono(880, 0.15, { tipo: 'square', vol: 0.12 }); tono(110, 0.15, { vol: 0.45 }); }
   else if (nombre === 'fin') { tono(150, 1.4, { tipo: 'sawtooth', vol: 0.3 }); tono(157, 1.4, { tipo: 'square', vol: 0.12 }); }
   else if (nombre === 'alto') { tono(990, 0.15, { tipo: 'triangle', vol: 0.3 }); tono(1320, 0.35, { tipo: 'triangle', vol: 0.3, cuando: 0.13 }); }
+  else if (nombre === 'mecha') { tono(2300, 0.045, { tipo: 'square', vol: 0.1 }); tono(1150, 0.06, { tipo: 'triangle', vol: 0.12 }); }
+  else if (nombre === 'explosion') explosion();
+}
+/* Ruido que se apaga y se vuelve grave, más un golpe de bajo */
+function explosion() {
+  if (!audioActivo()) return;
+  const t = audio.currentTime, dur = 2.2, n = Math.floor(audio.sampleRate * dur);
+  const buf = audio.createBuffer(1, n, audio.sampleRate), datos = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) datos[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.2);
+  const ruido = audio.createBufferSource(); ruido.buffer = buf;
+  const filtro = audio.createBiquadFilter(); filtro.type = 'lowpass';
+  filtro.frequency.setValueAtTime(3200, t); filtro.frequency.exponentialRampToValueAtTime(90, t + dur);
+  const g = audio.createGain(); g.gain.setValueAtTime(1, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  ruido.connect(filtro).connect(g).connect(audio.destination);
+  ruido.start(t); ruido.stop(t + dur);
+  const o = audio.createOscillator(), go = audio.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(28, t + 1.3);
+  go.gain.setValueAtTime(0.0001, t); go.gain.exponentialRampToValueAtTime(0.9, t + 0.02); go.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+  o.connect(go).connect(audio.destination); o.start(t); o.stop(t + 1.5);
 }
 
 /* ---------- El reloj se actualiza solo: número, anillo y sonidos de cada segundo ---------- */

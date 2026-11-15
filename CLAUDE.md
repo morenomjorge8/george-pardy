@@ -102,6 +102,13 @@ Cada reto tiene `nombre`, `instrucciones` (se ven en el proyector), `material` (
 
 Retos ya definidos (Minuto para Ganar): 1 A Bit Dicey, 2 Face the Cookie, 3 Ligas vs Cartas. Están en `datos/config-inicial.json`.
 
+### Tic-Tac-Boom
+- Pasa una persona de cada equipo al frente. Se pasan una pelota por turnos y cada quien dice una palabra con la sílaba. Pierde quien tenga la pelota cuando explota la bomba.
+- Sílabas: el nombre de cada reto es su sílaba (reto 1 CON, 2 TRA, 3 SAL). `config.silabasRespaldo` (texto separado por comas, por defecto `"PAR, RES"`) da sílabas de respaldo; el iPad puede cambiar la sílaba en cualquier momento.
+- Ruleta chica TIC / TAC / BOOM (se gira desde el iPad o con Espacio, 3.2 s): **TIC** = la palabra empieza con la sílaba; **TAC** = la tiene en cualquier parte; **BOOM** = termina con la sílaba. El giro se decide una vez y se guarda (`modo`, `giroEn`, `desfase`), como la ruleta grande.
+- Bomba: al encenderla se sortea un tiempo **aleatorio entre 30 y 45 s** (`duracionMs`). **Nunca se muestra el tiempo restante**, ni en el proyector ni en el iPad. En el proyector suena una mecha "ti… ti… titi… tititi" que se acelera, y al llegar a 0 suena una explosión y aparece "¡BOOM!". Se puede pausar, continuar y jugar otra ronda.
+- Estado: `bomba: null | { modo, giroEn, desfase, silaba, estado: 'listo'|'corriendo'|'detenido', inicioEn, restanteMs, duracionMs }` dentro de `dobleONada` o `minijuegoLibre`. Explotó = corriendo con restante 0.
+
 ### Minuto para Ganar: reloj
 - Estado del reloj: `listo` → `corriendo` (`inicioEn`, `restanteMs`) → `detenido` (`restanteMs`). "Se acabó" se calcula cuando lo restante llega a 0. Acciones: iniciar / detener / continuar / reiniciar.
 - Mientras está `listo` se ve la tarjeta del reto. Al iniciar, el proyector cambia a un reloj grande: título del reto, anillo que se vacía, número en Bungee, estado ("segundos", "Tiempo detenido", "¡Se acabó el tiempo!") y lo que se juega. Últimos 10 s en rosa con latido.
@@ -241,7 +248,7 @@ Después de cada paso, abre la página localmente (por ejemplo con `npx serve` o
 ## 11. Pendientes del plan (no inventar; preguntar al usuario)
 
 - Escribir las 20 preguntas definitivas.
-- Definir la mecánica de Tic-Tac-Boom y las condiciones de victoria de 100 Mexicanos Dijeron y Password.
+- Definir las condiciones de victoria de 100 Mexicanos Dijeron y Password. (Tic-Tac-Boom ya está definido.)
 - Escribir los retos de los otros cinco minijuegos (15 en total).
 - Ligas vs Cartas: cuántas cartas y a qué distancia se dispara.
 - Opción pendiente de decidir: poder elegir el reto a mano durante un Doble o Nada en lugar de girar.

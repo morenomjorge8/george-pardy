@@ -7,11 +7,14 @@ import {
   tieneReloj, relojDe, restanteMs, duracionDe,
   abrir, mostrarRespuesta, resolver, cerrar, ajustar, pasarTurno, reactivar, nuevaPartida,
   decidirDoble, girar, resultadoDoble, cerrarDoble, relojAccion, alternarReloj,
-  abrirLibre, cerrarLibre, abrirNombres, cerrarNombres, turnoNombres, asignarNombre, elegirEquipo
+  abrirLibre, cerrarLibre, abrirNombres, cerrarNombres, turnoNombres, asignarNombre, elegirEquipo,
+  SILABAS_BASE, tieneBomba, bombaDe, modoBomba, bombaGirando, bombaExploto, silabaDe, silabasDisponibles,
+  bombaGirar, bombaSilaba, bombaAccion, alternarBomba
 } from './estado.js';
 import * as sync from './sync.js';
 import { renderRuleta, estaGirando, marcarFase } from './ruleta.js';
 import { etiquetaReloj, relojHtml, tickReloj, prepararAudio, sonido } from './reloj.js';
+import { ruedaBombaHtml, animarRuedasBomba, tickBomba } from './bomba.js';
 
 const VISTAS = ['pantalla', 'control', 'preguntas'];
 const NUM = new Intl.NumberFormat('es-MX');
@@ -218,6 +221,82 @@ function controlRelojHtml(d) {
   return `<div class="ctl-reloj">${relojHtml(d, 'ctl-reloj-cara')}<div class="ctl-reloj-botones"><p class="ctl-nota">${etiquetaReloj(r)}</p>${b}</div></div>`;
 }
 
+/* ---------- Tic-Tac-Boom ---------- */
+const comillas = s => `“${esc(s)}”`;
+function reglaBomba(m, s) {
+  if (m.id === 'tic') return `una palabra que <b>empiece</b> con ${comillas(s)}`;
+  if (m.id === 'tac') return `una palabra que <b>tenga</b> ${comillas(s)} en cualquier parte`;
+  return `una palabra que <b>termine</b> con ${comillas(s)}`;
+}
+const avisoAudio = '<p class="reloj-aviso" data-aviso-audio hidden>Haz clic en esta pantalla para activar el sonido.</p>';
+/* Lo que ve el proyector una vez que se giró la ruleta chica. Nunca muestra el tiempo. */
+function bombaPantallaHtml(d, lema) {
+  const b = bombaDe(d), m = modoBomba(b.modo), s = silabaDe(d);
+  if (bombaGirando(b)) {
+    return `<p class="reloj-titulo" style="--juego:#FF6A13">¿TIC, TAC o BOOM?</p>
+      ${ruedaBombaHtml(b)}
+      <p class="ttb-silaba-chica">Sílaba: <b>${esc(s)}</b></p>`;
+  }
+  if (bombaExploto(b)) {
+    return `<div class="ttb-explosion">
+        <p class="ttb-boom emoji" aria-hidden="true">💥</p>
+        <p class="ttb-boom-texto">¡BOOM!</p>
+        <p class="reloj-estado">Pierde quien tenga la pelota.</p>
+        ${lema}
+      </div>`;
+  }
+  const estados = { listo: 'Pasen al frente con la pelota.', corriendo: '¡La bomba está encendida!', detenido: 'Bomba en pausa.' };
+  return `${b.estado === 'listo' ? '' : `<p class="ttb-bomba emoji${b.estado === 'corriendo' ? ' encendida' : ''}" aria-hidden="true">💣</p>`}
+    <div class="ttb-fila"><p class="ttb-modo" style="--modo:${m.color}">${m.nombre}</p><p class="ttb-silaba">${esc(s)}</p></div>
+    <p class="ttb-regla">Digan ${reglaBomba(m, s)}.</p>
+    <p class="reloj-estado">${estados[b.estado]}</p>
+    ${lema}
+    ${avisoAudio}`;
+}
+function botonesBombaPantalla(d) {
+  const b = bombaDe(d);
+  const btn = (accion, t) => `<button type="button" class="btn-escenario" data-accion="${accion}">${t}</button>`;
+  if (bombaGirando(b)) return '';
+  if (bombaExploto(b)) return btn('bomba-reiniciar', 'Otra ronda');
+  if (b.estado === 'corriendo') return btn('bomba-pausar', 'Pausar <kbd>Espacio</kbd>');
+  if (b.estado === 'detenido') return btn('bomba-continuar', 'Continuar <kbd>Espacio</kbd>') + btn('bomba-reiniciar', 'Otra ronda');
+  if (!b.modo) return btn('bomba-girar', 'Girar Tic-Tac-Boom <kbd>Espacio</kbd>');
+  return btn('bomba-encender', 'Encender la bomba <kbd>Espacio</kbd>') + btn('bomba-girar', 'Girar otra vez');
+}
+function bombaControlHtml(d) {
+  const b = bombaDe(d), m = modoBomba(b.modo), s = silabaDe(d);
+  const girando = bombaGirando(b), exploto = bombaExploto(b);
+  const btn = (accion, t, primario) => `<button type="button" class="btn${primario ? ' btn-primario' : ''}" data-accion="${accion}">${t}</button>`;
+  let texto, botones;
+  if (girando) texto = 'Girando la ruleta…';
+  else if (!m) texto = 'Gira la ruleta para ver si es TIC, TAC o BOOM.';
+  else texto = `<b class="ttb-modo-chico" style="--modo:${m.color};--modo-tinta:${m.tinta}">${m.nombre}</b> Digan ${reglaBomba(m, s)}.`;
+  let estado = '';
+  if (exploto) estado = '💥 ¡Explotó! Pierde quien tenga la pelota.';
+  else if (b.estado === 'corriendo') estado = '💣 Bomba encendida. Explota sola entre 30 y 45 segundos; nadie ve el tiempo.';
+  else if (b.estado === 'detenido') estado = 'Bomba en pausa.';
+  if (girando) botones = '';
+  else if (exploto) botones = btn('bomba-reiniciar', 'Otra ronda', true);
+  else if (b.estado === 'corriendo') botones = btn('bomba-pausar', 'Pausar la bomba', true);
+  else if (b.estado === 'detenido') botones = btn('bomba-continuar', 'Continuar', true) + btn('bomba-reiniciar', 'Otra ronda');
+  else if (!m) botones = btn('bomba-girar', 'Girar Tic-Tac-Boom', true);
+  else botones = btn('bomba-encender', 'Encender la bomba', true) + btn('bomba-girar', 'Girar otra vez');
+  return `<div class="ctl-bomba">
+      <p class="ttb-rotulo">Sílaba</p>
+      <div class="ttb-silabas">${silabasDisponibles().map(x => `<button type="button" class="ttb-chip" data-accion="bomba-silaba" data-silaba="${esc(x)}" aria-pressed="${x === s}">${esc(x)}</button>`).join('')}</div>
+      <p class="ctl-texto">${texto}</p>
+      ${estado ? `<p class="ctl-nota">${estado}</p>` : ''}
+      <div class="ctl-bomba-botones">${botones}</div>
+    </div>`;
+}
+/* Línea del reto: en Tic-Tac-Boom muestra la sílaba */
+function lineaReto(d) {
+  const { juego: mj, n } = infoCasilla(d.casilla);
+  const nombre = retoDe(d.casilla).nombre.trim();
+  if (mj.bomba) return `Reto ${n} · Sílaba: ${esc(silabaDe(d))}`;
+  return nombre ? `Reto ${n}: ${esc(nombre)}` : `Reto ${n} de 3`;
+}
+
 function selectorNombresHtml(modo) {
   const { estado, config } = juego;
   const t = estado.eligiendoNombres ? estado.eligiendoNombres.turno : 0;
@@ -257,8 +336,11 @@ function renderLibre() {
   const nombreReto = reto.nombre.trim();
   const conReloj = tieneReloj(L);
   const r = conReloj ? relojDe(L) : null;
+  const conBomba = tieneBomba(L);
   let cuerpo;
-  if (conReloj && r.estado !== 'listo') {
+  if (conBomba && bombaDe(L).modo) {
+    cuerpo = bombaPantallaHtml(L, '');
+  } else if (conReloj && r.estado !== 'listo') {
     cuerpo = `<p class="reloj-titulo" style="--juego:${mj.color}"><span class="emoji" aria-hidden="true">${mj.emoji}</span> ${esc(nombreReto || mj.nombre)}</p>
       ${relojHtml(L, 'reloj-cara')}
       <p class="reloj-estado">${etiquetaReloj(r)}</p>
@@ -266,12 +348,12 @@ function renderLibre() {
   } else {
     cuerpo = `<p class="juego-emoji emoji" aria-hidden="true">${mj.emoji}</p>
       <h2 class="juego-nombre" id="libre-titulo" style="--juego:${mj.color}">${esc(mj.nombre)}</h2>
-      <p class="juego-reto">${nombreReto ? `Reto ${n}: ${esc(nombreReto)}` : `Reto ${n} de 3`}</p>
+      <p class="juego-reto">${lineaReto(L)}</p>
       <p class="juego-desc">${esc(reto.instrucciones.trim() || mj.desc)}</p>`;
   }
   const cu = $('#libre-cuerpo');
-  if (cuerpo !== libreHtmlPrevio) { cu.innerHTML = cuerpo; libreHtmlPrevio = cuerpo; }
-  $('#libre-controles').innerHTML = (conReloj && enlaceTimer() ? botonTimer() : '') + (enlaceVideo(reto) ? botonVideo(enlaceVideo(reto)) : '') + (conReloj ? botonesRelojPantalla(L) : '') +
+  if (cuerpo !== libreHtmlPrevio) { cu.innerHTML = cuerpo; libreHtmlPrevio = cuerpo; animarRuedasBomba(); }
+  $('#libre-controles').innerHTML = (conReloj && enlaceTimer() ? botonTimer() : '') + (enlaceVideo(reto) ? botonVideo(enlaceVideo(reto)) : '') + (conReloj ? botonesRelojPantalla(L) : '') + (conBomba ? botonesBombaPantalla(L) : '') +
     '<button type="button" class="btn-escenario" data-accion="libre-cerrar">Cerrar <kbd>Esc</kbd></button>';
   ov.hidden = false;
 }
@@ -281,7 +363,7 @@ function renderDobleONada() {
   const { estado } = juego;
   const ov = $('#doble-o-nada');
   const d = estado.dobleONada;
-  if (!d) { ov.hidden = true; donPrevio = null; donHtmlPrevio = ''; ladoHtmlPrevio = ''; marcarFase(null); return; }
+  if (!d) { ov.hidden = true; donPrevio = null; donHtmlPrevio = ''; ladoHtmlPrevio = ''; $('#don-reloj').dataset.html = ''; marcarFase(null); return; }
   const v = VALORES[d.i];
   const fase = `${d.c}-${d.i}-${d.fase}`;
   $('#don-cat').textContent = nombreCategoria(d.c);
@@ -302,19 +384,29 @@ function renderDobleONada() {
     const conReloj = revelado && tieneReloj(d);
     const r = conReloj ? relojDe(d) : null;
     const modoReloj = conReloj && r.estado !== 'listo';
-    $('#don-ruleta').hidden = modoReloj;
-    $('#don-reloj').hidden = !modoReloj;
+    const conBomba = revelado && tieneBomba(d);
+    const modoBombaVisible = conBomba && !!bombaDe(d).modo;
+    $('#don-ruleta').hidden = modoReloj || modoBombaVisible;
+    $('#don-reloj').hidden = !(modoReloj || modoBombaVisible);
     let lado;
     if (revelado) {
-      const { juego: mj, n } = infoCasilla(d.casilla);
+      const { juego: mj } = infoCasilla(d.casilla);
       const reto = retoDe(d.casilla);
       lado = `<p class="juego-emoji emoji" aria-hidden="true">${mj.emoji}</p>
         <h2 class="juego-nombre" id="don-titulo" style="--juego:${mj.color}">${esc(mj.nombre)}</h2>
-        <p class="juego-reto">${reto.nombre.trim() ? `Reto ${n}: ${esc(reto.nombre.trim())}` : `Reto ${n} de 3`}</p>
+        <p class="juego-reto">${lineaReto(d)}</p>
         <p class="juego-desc">${esc(reto.instrucciones.trim() || mj.desc)}</p>
         ${platosHtml(v)}`;
       botones = botonesResultado;
       if (conReloj) botones = botonesRelojPantalla(d) + botones;
+      if (conBomba) {
+        botones = botonesBombaPantalla(d) + botones;
+        if (modoBombaVisible) {
+          const zb = $('#don-reloj');
+          const hb = bombaPantallaHtml(d, `<p class="don-lema reloj-lema">${htmlEquipo(d.equipo)} se juega ${NUM.format(v)} puntos.</p>`);
+          if (zb.dataset.html !== hb) { zb.innerHTML = hb; zb.dataset.html = hb; animarRuedasBomba(); }
+        }
+      }
       if (enlaceVideo(reto)) botones = botonVideo(enlaceVideo(reto)) + botones;
       if (conReloj && enlaceTimer()) botones = botonTimer() + botones;
       if (modoReloj) {
@@ -324,7 +416,7 @@ function renderDobleONada() {
           <p class="don-lema reloj-lema">${htmlEquipo(d.equipo)} se juega ${NUM.format(v)} puntos.</p>
           <p class="reloj-aviso" data-aviso-audio hidden>Haz clic en esta pantalla para activar el sonido.</p>`;
         const zr = $('#don-reloj');
-        if (zr.innerHTML !== reloj) zr.innerHTML = reloj;
+        if (zr.innerHTML !== reloj) { zr.innerHTML = reloj; zr.dataset.html = ''; }
       }
     } else {
       lado = `<h2 class="don-titulo don-titulo-chico" id="don-titulo">Doble o nada</h2>
@@ -451,6 +543,7 @@ function renderControlLibre(L) {
     ${reto.material.trim() ? `<p class="ctl-material"><b>Material:</b> ${esc(reto.material.trim())}</p>` : ''}
     ${avisoVideoCtl(reto)}`;
   if (tieneReloj(L)) h += controlRelojHtml(L);
+  if (tieneBomba(L)) h += bombaControlHtml(L);
   h += '<button type="button" class="btn btn-primario" data-accion="libre-cerrar">Cerrar minijuego</button>';
   $('#ctl-libre').innerHTML = h;
 }
@@ -487,6 +580,7 @@ function renderControlDoble(d) {
       ${avisoVideoCtl(reto)}
       <p class="ctl-nota">Espera a que la ruleta se detenga en el proyector antes de anunciarlo.</p>`;
       if (tieneReloj(d)) h += controlRelojHtml(d);
+      if (tieneBomba(d)) h += bombaControlHtml(d);
     } else {
       h += `<p class="ctl-texto">${htmlEquipo(d.equipo)} se juega ${NUM.format(v)} puntos.</p>
       <p class="ctl-nota">Ya no quedan casillas en la ruleta: elijan un minijuego y marca el resultado.</p>`;
@@ -591,12 +685,14 @@ function renderEditor() {
   MINIJUEGOS.forEach((m, j) => {
     h += `<section class="cat-edit"><h3 class="reto-juego"><span class="emoji" aria-hidden="true">${m.emoji}</span> ${esc(m.nombre)}</h3>`;
     if (m.segundos) h += `<label class="campo campo-timer">Video del temporizador (YouTube)<input type="url" maxlength="300" data-campo="video-temporizador" placeholder="https://www.youtube.com/watch?v=…" value="${esc(config.videoTemporizador)}"></label>`;
+    if (m.bomba) h += `<p class="editor-intro campo-timer">En Tic-Tac-Boom el nombre de cada reto es su sílaba. Las de respaldo aparecen en el control para cambiarla si hace falta.</p>
+      <label class="campo campo-timer">Sílabas de respaldo (separadas por coma)<input type="text" maxlength="60" data-campo="silabas-respaldo" placeholder="PAR, RES" value="${esc(config.silabasRespaldo)}"></label>`;
     config.minijuegos[j].retos.forEach((r, x) => {
       const et = `reto ${x + 1} de ${esc(m.nombre)}`;
       h += `<div class="fila-reto">
         <span class="valor" aria-hidden="true">${x + 1}</span>
         <div class="reto-campos">
-          <input type="text" maxlength="60" data-campo="reto-nombre" data-j="${j}" data-n="${x}" placeholder="Nombre del reto" aria-label="Nombre del ${et}" value="${esc(r.nombre)}">
+          <input type="text" maxlength="60" data-campo="reto-nombre" data-j="${j}" data-n="${x}" placeholder="${m.bomba ? `Sílaba (por ejemplo ${SILABAS_BASE[x]})` : 'Nombre del reto'}" aria-label="${m.bomba ? 'Sílaba' : 'Nombre'} del ${et}" value="${esc(r.nombre)}">
           <textarea rows="2" maxlength="400" data-campo="reto-instrucciones" data-j="${j}" data-n="${x}" placeholder="Instrucciones: qué hay que hacer para ganar" aria-label="Instrucciones del ${et}">${esc(r.instrucciones)}</textarea>
           <input type="text" maxlength="160" data-campo="reto-material" data-j="${j}" data-n="${x}" placeholder="Material" aria-label="Material del ${et}" value="${esc(r.material)}">
           <input type="url" maxlength="300" data-campo="reto-video" data-j="${j}" data-n="${x}" placeholder="Enlace del video de explicación (YouTube)" aria-label="Video del ${et}" value="${esc(r.video)}">
@@ -646,6 +742,7 @@ document.addEventListener('input', e => {
     case 'reto-material': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].material = v; break;
     case 'reto-video': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].video = v; break;
     case 'video-temporizador': nc.videoTemporizador = v; break;
+    case 'silabas-respaldo': nc.silabasRespaldo = v; break;
     default: return;
   }
   actualizarConfig(nc);
@@ -684,6 +781,12 @@ document.addEventListener('click', e => {
     case 'reloj-detener': relojAccion('detener'); break;
     case 'reloj-reiniciar': relojAccion('reiniciar'); break;
     case 'probar-sonido': prepararAudio(); setTimeout(() => sonido('inicio'), 60); break;
+    case 'bomba-girar': bombaGirar(); break;
+    case 'bomba-silaba': bombaSilaba(b.dataset.silaba); break;
+    case 'bomba-encender': bombaAccion('encender'); break;
+    case 'bomba-pausar': bombaAccion('pausar'); break;
+    case 'bomba-continuar': bombaAccion('continuar'); break;
+    case 'bomba-reiniciar': bombaAccion('reiniciar'); break;
     case 'libre-abrir': abrirLibre(b.dataset.casilla); break;
     case 'libre-cerrar': cerrarLibre(); break;
     case 'nombres-abrir': abrirNombres(); break;
@@ -712,7 +815,7 @@ document.addEventListener('keydown', e => {
   }
   if (estado.eligiendoNombres) { if (k === 'Escape') cerrarNombres(); return; }
   if (estado.minijuegoLibre) {
-    if (k === ' ') { e.preventDefault(); alternarReloj(); }
+    if (k === ' ') { e.preventDefault(); if (tieneBomba(estado.minijuegoLibre)) alternarBomba(); else alternarReloj(); }
     else if (k === 'Escape') cerrarLibre();
     return;
   }
@@ -721,7 +824,7 @@ document.addEventListener('keydown', e => {
     const t = k.toLowerCase();
     if (d.fase === 'oferta') { if (t === 's') decidirDoble(true); else if (t === 'n') decidirDoble(false); }
     else if (d.fase === 'ruleta') { if (k === ' ' || k === 'Enter') { e.preventDefault(); girar(); } }
-    else if (d.fase === 'jugando') { if (t === 'g') resultadoDoble(true); else if (t === 'p') resultadoDoble(false); else if (k === ' ' && tieneReloj(d)) { e.preventDefault(); alternarReloj(); } }
+    else if (d.fase === 'jugando') { if (t === 'g') resultadoDoble(true); else if (t === 'p') resultadoDoble(false); else if (k === ' ' && tieneReloj(d)) { e.preventDefault(); alternarReloj(); } else if (k === ' ' && tieneBomba(d) && !estaGirando()) { e.preventDefault(); alternarBomba(); } }
     else if (k === 'Escape' || k === 'Enter' || k === ' ') { e.preventDefault(); cerrarDoble(); }
     return;
   }
@@ -755,6 +858,7 @@ document.addEventListener('fullscreenchange', () => {
 
 /* ---------- Arranque ---------- */
 setInterval(() => tickReloj(vistaActual() === 'pantalla', render), 100);
+setInterval(() => tickBomba(vistaActual() === 'pantalla', render), 40);
 window.addEventListener('hashchange', render);
 render();
 sync.iniciar({

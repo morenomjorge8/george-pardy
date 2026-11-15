@@ -23,7 +23,7 @@ export const OPCIONES_EQUIPO = [
 export const IDS_EQUIPO = OPCIONES_EQUIPO.map(o => o.id);
 export const MINIJUEGOS = [
   { nombre: '100 Mexicanos Dijeron', corto: '100 Mexicanos', emoji: '💯', color: '#E4007C', tinta: '#FFFFFF', desc: 'Adivinen las respuestas más populares, compitiendo contra el equipo rival.' },
-  { nombre: 'Tic-Tac-Boom', corto: 'Tic-Tac-Boom', emoji: '💣', color: '#FF6A13', tinta: '#12163A', desc: 'Juego de rapidez con una bomba y tiempo limitado.' },
+  { nombre: 'Tic-Tac-Boom', corto: 'Tic-Tac-Boom', emoji: '💣', color: '#FF6A13', tinta: '#12163A', desc: 'Pasa una persona de cada equipo. Se pasan la pelota por turnos diciendo una palabra con la sílaba. Pierde quien tenga la pelota cuando explote la bomba.', bomba: true },
   { nombre: 'Minuto para Ganar', corto: 'Minuto', emoji: '⏱️', color: '#FFB81C', tinta: '#12163A', desc: 'Completen el reto en 60 segundos.', segundos: 60 },
   { nombre: 'Password', corto: 'Password', emoji: '🔑', color: '#00A3AD', tinta: '#04232A', desc: 'Adivinen la palabra con las pistas de sus compañeros.' },
   { nombre: 'Atínale al Precio', corto: 'Atínale', emoji: '🏷️', color: '#22A35A', tinta: '#072A16', desc: 'Los dos equipos adivinan el precio. Si queda más cerca el equipo que va por el doble, gana; si queda más cerca el que va ganando, se lo impide.' },
@@ -33,6 +33,16 @@ export const MINIJUEGOS = [
 export const CASILLAS = [];
 for (let n = 1; n <= 3; n++) for (let j = 0; j < MINIJUEGOS.length; j++) CASILLAS.push(`${j}-${n}`);
 export const infoCasilla = id => { const [j, n] = id.split('-').map(Number); return { juego: MINIJUEGOS[j], j, n }; };
+
+/* Tic-Tac-Boom: la ruleta chica decide dónde va la sílaba; la bomba explota entre 30 y 45 s */
+export const MODOS_BOMBA = [
+  { id: 'tic', nombre: 'TIC', verbo: 'empiece con', color: '#00A3AD', tinta: '#04232A' },
+  { id: 'tac', nombre: 'TAC', verbo: 'tenga en cualquier parte', color: '#FFB81C', tinta: '#12163A' },
+  { id: 'boom', nombre: 'BOOM', verbo: 'termine con', color: '#E4007C', tinta: '#FFFFFF' }
+];
+export const SILABAS_BASE = ['CON', 'TRA', 'SAL'];
+export const BOMBA_MIN_MS = 30000, BOMBA_MAX_MS = 45000, BOMBA_GIRO_MS = 3200;
+const J_BOMBA = MINIJUEGOS.findIndex(m => m.bomba);
 
 export const clonar = o => JSON.parse(JSON.stringify(o));
 export const texto = v => (typeof v === 'string' ? v : '');
@@ -79,7 +89,8 @@ export function configBase() {
     minijuegos: MINIJUEGOS.map(() => ({ retos: [0, 1, 2].map(() => ({ nombre: '', instrucciones: '', material: '', video: '' })) })),
     videoTemporizador: '',
     videoTemporizadorInicio: 0,
-    usarTimerYoutube: false
+    usarTimerYoutube: false,
+    silabasRespaldo: 'PAR, RES'
   };
 }
 export function estadoBase() {
@@ -94,6 +105,21 @@ export function normalizarReloj(r) {
     estado: r.estado,
     inicioEn: Number.isFinite(r.inicioEn) ? r.inicioEn : 0,
     restanteMs: Number.isFinite(r.restanteMs) ? Math.max(0, Math.min(600000, r.restanteMs)) : 60000
+  };
+}
+const limpiarSilaba = s => texto(s).trim().toUpperCase().replace(/\s+/g, '').slice(0, 10);
+export function normalizarBomba(b) {
+  if (!b || typeof b !== 'object') return null;
+  const ms = v => (Number.isFinite(v) ? Math.max(0, Math.min(BOMBA_MAX_MS, v)) : 0);
+  return {
+    modo: MODOS_BOMBA.some(m => m.id === b.modo) ? b.modo : null,
+    giroEn: Number.isFinite(b.giroEn) ? b.giroEn : 0,
+    desfase: Number.isFinite(b.desfase) ? Math.max(-0.4, Math.min(0.4, b.desfase)) : 0,
+    silaba: limpiarSilaba(b.silaba),
+    estado: ['corriendo', 'detenido'].includes(b.estado) ? b.estado : 'listo',
+    inicioEn: Number.isFinite(b.inicioEn) ? b.inicioEn : 0,
+    restanteMs: ms(b.restanteMs),
+    duracionMs: ms(b.duracionMs)
   };
 }
 export function normalizarConfig(raw) {
@@ -132,6 +158,7 @@ export function normalizarConfig(raw) {
   base.videoTemporizador = texto(raw.videoTemporizador);
   base.videoTemporizadorInicio = Number.isFinite(raw.videoTemporizadorInicio) ? Math.max(0, Math.round(raw.videoTemporizadorInicio)) : 0;
   base.usarTimerYoutube = raw.usarTimerYoutube === true;
+  if (typeof raw.silabasRespaldo === 'string') base.silabasRespaldo = raw.silabasRespaldo;
   return base;
 }
 const casillaValida = (c, i) => Number.isInteger(c) && Number.isInteger(i) && c >= 0 && c < 5 && i >= 0 && i < 4;
@@ -156,11 +183,12 @@ export function normalizarEstado(raw) {
       casilla: CASILLAS.includes(d.casilla) ? d.casilla : null,
       desfase: Number.isFinite(d.desfase) ? Math.max(-0.4, Math.min(0.4, d.desfase)) : 0,
       giroEn: Number.isFinite(d.giroEn) ? d.giroEn : 0,
-      reloj: normalizarReloj(d.reloj)
+      reloj: normalizarReloj(d.reloj),
+      bomba: normalizarBomba(d.bomba)
     };
   }
   const L = raw.minijuegoLibre;
-  if (L && CASILLAS.includes(L.casilla)) e.minijuegoLibre = { casilla: L.casilla, reloj: normalizarReloj(L.reloj) };
+  if (L && CASILLAS.includes(L.casilla)) e.minijuegoLibre = { casilla: L.casilla, reloj: normalizarReloj(L.reloj), bomba: normalizarBomba(L.bomba) };
   if (raw.eligiendoNombres && typeof raw.eligiendoNombres === 'object') e.eligiendoNombres = { turno: raw.eligiendoNombres.turno === 1 ? 1 : 0 };
   const v = raw.video;
   if (v && enlaceValido(v.url)) {
@@ -249,6 +277,24 @@ export function juegoConReloj() {
   return d && d.fase === 'jugando' ? d : null;
 }
 
+/* Tic-Tac-Boom */
+export const tieneBomba = d => !!(d && d.casilla && infoCasilla(d.casilla).juego.bomba);
+const BOMBA_BASE = { modo: null, giroEn: 0, desfase: 0, silaba: '', estado: 'listo', inicioEn: 0, restanteMs: 0, duracionMs: 0 };
+export const bombaDe = d => (d && d.bomba) || BOMBA_BASE;
+export const modoBomba = id => MODOS_BOMBA.find(m => m.id === id) || null;
+export const bombaGirando = b => !!b.modo && ahora() - b.giroEn < BOMBA_GIRO_MS;
+export const bombaExploto = b => b.estado === 'corriendo' && restanteMs(b) <= 0;
+/* La sílaba del reto es su nombre en el editor; si está vacío, CON, TRA o SAL */
+function silabaDeReto(n) {
+  const r = juego.config.minijuegos[J_BOMBA].retos[n - 1];
+  return limpiarSilaba(r && r.nombre) || SILABAS_BASE[n - 1];
+}
+export function silabasDisponibles() {
+  const respaldo = juego.config.silabasRespaldo.split(/[,;\s]+/).map(limpiarSilaba);
+  return [...new Set([1, 2, 3].map(silabaDeReto).concat(respaldo).filter(Boolean))];
+}
+export const silabaDe = d => bombaDe(d).silaba || (d && d.casilla ? silabaDeReto(infoCasilla(d.casilla).n) : '');
+
 /* ---------- Acciones del tablero ---------- */
 export function abrir(c, i) {
   const e = E();
@@ -304,7 +350,7 @@ export function girar() {
   cambiarEstado({
     ...e,
     ruletaUsadas: [...e.ruletaUsadas, id],
-    dobleONada: { ...d, fase: 'jugando', casilla: id, desfase: Math.random() * 0.7 - 0.35, giroEn: ahora(), reloj: null }
+    dobleONada: { ...d, fase: 'jugando', casilla: id, desfase: Math.random() * 0.7 - 0.35, giroEn: ahora(), reloj: null, bomba: null }
   });
 }
 export function resultadoDoble(gano) {
@@ -328,8 +374,12 @@ export function relojAccion(tipo) {
   if (tipo === 'iniciar') { if (r.estado === 'corriendo' || ms <= 0) return; nuevo = { estado: 'corriendo', inicioEn: ahora(), restanteMs: ms }; }
   else if (tipo === 'detener') { if (r.estado !== 'corriendo') return; nuevo = { estado: 'detenido', inicioEn: 0, restanteMs: ms }; }
   else nuevo = { estado: 'listo', inicioEn: 0, restanteMs: duracionDe(d) };
-  if (E().minijuegoLibre) cambiarEstado({ ...E(), minijuegoLibre: { ...d, reloj: nuevo } });
-  else cambiarEstado({ ...E(), dobleONada: { ...d, reloj: nuevo } });
+  cambiarJuegoActivo({ ...d, reloj: nuevo });
+}
+/* Guarda el minijuego en curso, sea libre o de Doble o Nada */
+function cambiarJuegoActivo(nd) {
+  if (E().minijuegoLibre) cambiarEstado({ ...E(), minijuegoLibre: nd });
+  else cambiarEstado({ ...E(), dobleONada: nd });
 }
 export function alternarReloj() {
   const d = juegoConReloj();
@@ -339,11 +389,57 @@ export function alternarReloj() {
   else if (ms > 0) relojAccion('iniciar');
 }
 
+/* ---------- Tic-Tac-Boom ---------- */
+/* La ruleta TIC/TAC/BOOM se decide una vez y se guarda, como la grande */
+export function bombaGirar() {
+  const d = juegoConReloj();
+  if (!tieneBomba(d)) return;
+  const b = bombaDe(d);
+  if (b.estado !== 'listo' || bombaGirando(b)) return;
+  const modo = MODOS_BOMBA[Math.floor(Math.random() * MODOS_BOMBA.length)].id;
+  cambiarJuegoActivo({ ...d, bomba: { ...b, modo, giroEn: ahora(), desfase: Math.random() * 0.7 - 0.35 } });
+}
+export function bombaSilaba(s) {
+  const d = juegoConReloj();
+  if (!tieneBomba(d) || !silabasDisponibles().includes(s)) return;
+  cambiarJuegoActivo({ ...d, bomba: { ...bombaDe(d), silaba: s } });
+}
+/* encender: el tiempo se sortea aquí (30 a 45 s) y nadie lo ve */
+export function bombaAccion(tipo) {
+  const d = juegoConReloj();
+  if (!tieneBomba(d)) return;
+  const b = bombaDe(d), ms = restanteMs(b);
+  let nueva;
+  if (tipo === 'encender') {
+    if (b.estado !== 'listo' || !b.modo || bombaGirando(b)) return;
+    const dur = BOMBA_MIN_MS + Math.floor(Math.random() * (BOMBA_MAX_MS - BOMBA_MIN_MS + 1));
+    nueva = { ...b, estado: 'corriendo', inicioEn: ahora(), restanteMs: dur, duracionMs: dur };
+  } else if (tipo === 'pausar') {
+    if (b.estado !== 'corriendo' || ms <= 0) return;
+    nueva = { ...b, estado: 'detenido', inicioEn: 0, restanteMs: ms };
+  } else if (tipo === 'continuar') {
+    if (b.estado !== 'detenido') return;
+    nueva = { ...b, estado: 'corriendo', inicioEn: ahora() };
+  } else if (tipo === 'reiniciar') {
+    nueva = { ...b, estado: 'listo', inicioEn: 0, restanteMs: 0, duracionMs: 0 };
+  } else return;
+  cambiarJuegoActivo({ ...d, bomba: nueva });
+}
+/* Espacio en el proyector: girar → encender → pausar / continuar */
+export function alternarBomba() {
+  const d = juegoConReloj();
+  if (!tieneBomba(d)) return;
+  const b = bombaDe(d);
+  if (b.estado === 'listo') { if (!b.modo) bombaGirar(); else bombaAccion('encender'); }
+  else if (b.estado === 'corriendo') bombaAccion('pausar');
+  else bombaAccion('continuar');
+}
+
 /* ---------- Minijuego libre: no suma puntos ni gasta casillas ---------- */
 export function abrirLibre(id) {
   const e = E();
   if (!CASILLAS.includes(id) || e.abierta || e.dobleONada || e.eligiendoNombres) return;
-  cambiarEstado({ ...e, minijuegoLibre: { casilla: id, reloj: null } });
+  cambiarEstado({ ...e, minijuegoLibre: { casilla: id, reloj: null, bomba: null } });
 }
 export function cerrarLibre() {
   if (!E().minijuegoLibre) return;
