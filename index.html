@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>George Pardy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@400;600;700;800&family=Bungee&family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilos.css">
+<script type="module" src="js/app.js"></script>
+</head>
+<body>
+
+<!-- Inicio: elegir para qué se usa este dispositivo -->
+<section id="v-inicio" class="inicio" hidden>
+  <h1 class="marquesina">George Pardy</h1>
+  <div class="sala" id="sala-inicio" hidden></div>
+  <p class="pregunta-inicio" id="pregunta-inicio">¿Para qué vas a usar este dispositivo?</p>
+  <nav class="opciones" id="opciones-inicio" aria-label="Elegir vista">
+    <a class="opcion" href="#pantalla"><strong>Pantalla del proyector</strong><span>Muestra el tablero, las preguntas y el marcador.</span></a>
+    <a class="opcion" href="#control"><strong>Control del moderador</strong><span>Para el iPad: ves las respuestas y asignas los puntos.</span></a>
+    <a class="opcion" href="#preguntas"><strong>Editar preguntas</strong><span>Escribe las 20 preguntas, sus respuestas y los nombres de los equipos.</span></a>
+  </nav>
+  <div class="estado-inicio">
+    <span class="sync" data-sync></span>
+    <p class="nota-inicio" id="nota-inicio"></p>
+  </div>
+</section>
+
+<!-- Pantalla del proyector -->
+<section id="v-pantalla" class="escenario" hidden>
+  <header class="cabeza">
+    <h1 class="marquesina">George Pardy</h1>
+    <div class="herramientas auto">
+      <a class="btn-escenario" href="#control">Control</a>
+      <a class="btn-escenario" href="#preguntas">Preguntas</a>
+      <button type="button" class="btn-escenario" data-accion="nombres-abrir">Elegir nombres</button>
+      <button type="button" class="btn-escenario" data-accion="probar-sonido">Probar sonido</button>
+      <button type="button" class="btn-escenario" id="btn-fs" data-accion="pantalla-completa">Pantalla completa</button>
+    </div>
+    <p class="turno" id="turno-pantalla" aria-live="polite"></p>
+  </header>
+  <div class="tablero" id="tablero"></div>
+  <div class="marcador" id="marcador" aria-live="polite"></div>
+
+  <div class="pregunta-grande" id="pregunta-grande" role="dialog" aria-modal="true" aria-labelledby="pg-texto" hidden>
+    <div class="pg-cabeza"><span id="pg-cat"></span><span class="pg-valor" id="pg-valor"></span></div>
+    <div class="pg-cuerpo">
+      <p class="pg-texto" id="pg-texto"></p>
+      <ol class="pg-opciones" id="pg-opciones" hidden></ol>
+      <p class="pg-respuesta" id="pg-respuesta" aria-live="polite" hidden></p>
+    </div>
+    <div class="barra-escenario auto">
+      <button type="button" class="btn-escenario" id="pg-mostrar" data-accion="mostrar">Mostrar respuesta <kbd>R</kbd></button>
+      <button type="button" class="btn-escenario" id="pg-eq0" data-accion="acerto" data-equipo="0"></button>
+      <button type="button" class="btn-escenario" id="pg-eq1" data-accion="acerto" data-equipo="1"></button>
+      <button type="button" class="btn-escenario" data-accion="nadie">Nadie acertó <kbd>0</kbd></button>
+      <button type="button" class="btn-escenario" data-accion="cerrar">Volver sin calificar <kbd>Esc</kbd></button>
+    </div>
+  </div>
+
+  <div class="doble" id="doble-o-nada" role="dialog" aria-modal="true" aria-labelledby="don-titulo" hidden>
+    <div class="pg-cabeza"><span id="don-cat"></span><span class="pg-valor" id="don-valor"></span></div>
+    <div class="don-cuerpo" id="don-cuerpo" aria-live="polite"></div>
+    <div class="don-ruleta" id="don-ruleta" hidden>
+      <div class="rueda-marco">
+        <svg id="rueda" viewBox="-100 -100 200 200" role="img" aria-label="Ruleta de minijuegos"></svg>
+        <div class="puntero" aria-hidden="true"></div>
+      </div>
+      <div class="don-lado" id="don-lado" aria-live="polite"></div>
+    </div>
+    <div class="don-reloj" id="don-reloj" hidden></div>
+    <div class="barra-escenario auto" id="don-controles"></div>
+  </div>
+
+  <div class="doble" id="libre" role="dialog" aria-modal="true" aria-label="Minijuego" hidden>
+    <div class="pg-cabeza"><span>Minijuego</span><span></span></div>
+    <div class="libre-cuerpo" id="libre-cuerpo" aria-live="polite"></div>
+    <div class="barra-escenario auto" id="libre-controles"></div>
+  </div>
+
+  <div class="doble" id="nombres" role="dialog" aria-modal="true" aria-labelledby="nombres-titulo" hidden>
+    <div class="nombres-cabeza"><h2 class="don-titulo don-titulo-chico" id="nombres-titulo">Elijan su nombre</h2></div>
+    <div class="nombres-cuerpo" id="nombres-cuerpo"></div>
+    <div class="barra-escenario auto" id="nombres-controles"></div>
+  </div>
+</section>
+
+<!-- Control del moderador (iPad) -->
+<section id="v-control" class="panel" hidden>
+  <header class="barra">
+    <a class="marca" href="#">George Pardy</a>
+    <span class="sync" data-sync></span>
+    <nav class="nav" aria-label="Vistas">
+      <a href="#pantalla">Pantalla</a><a href="#control">Control</a><a href="#preguntas">Preguntas</a>
+    </nav>
+  </header>
+  <div class="equipos" id="ctl-equipos"></div>
+  <div class="fila-turno"><button type="button" class="btn" data-accion="turno">Pasar turno</button><button type="button" class="btn" data-accion="nombres-abrir">Elegir nombres</button></div>
+  <div id="ctl-zona-tablero">
+    <div class="ctl-tablero" id="ctl-tablero"></div>
+    <p class="leyenda">Las casillas con borde claro todavía no tienen pregunta escrita. Toca una casilla jugada dos veces para reactivarla.</p>
+    <div id="ctl-minijuegos"></div>
+  </div>
+  <div class="ctl-pregunta" id="ctl-pregunta" hidden></div>
+  <div class="ctl-pregunta" id="ctl-doble" hidden></div>
+  <div class="ctl-pregunta" id="ctl-libre" hidden></div>
+  <div class="ctl-pregunta" id="ctl-nombres" hidden></div>
+  <div class="pie"><button type="button" class="btn btn-alerta" id="btn-nueva" data-accion="nueva">Nueva partida</button></div>
+</section>
+
+<!-- Editor de preguntas -->
+<section id="v-preguntas" class="panel editor" hidden>
+  <header class="barra">
+    <a class="marca" href="#">George Pardy</a>
+    <span class="sync" data-sync></span>
+    <nav class="nav" aria-label="Vistas">
+      <a href="#pantalla">Pantalla</a><a href="#control">Control</a><a href="#preguntas">Preguntas</a>
+    </nav>
+  </header>
+  <p class="editor-intro">Los cambios se guardan solos. Para opción múltiple, escribe las opciones después de la pregunta empezando con A), B), C) y D), y pon la letra correcta al inicio de la respuesta, por ejemplo “B) Falso”. <span class="guardado" id="guardado" aria-live="polite"></span></p>
+  <div id="editor-campos"></div>
+</section>
+
+</body>
+</html>

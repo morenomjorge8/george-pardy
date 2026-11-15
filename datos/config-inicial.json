@@ -1,0 +1,248 @@
+{
+  "categorias": [
+    {
+      "nombre": "Comida",
+      "preguntas": [
+        {
+          "pregunta": "¿A qué casa de Hogwarts pertenece Rubeus Hagrid?",
+          "respuesta": "Gryffindor"
+        },
+        {
+          "pregunta": "El Horrocrux escondido en la copa de Helga Hufflepuff fue destruido utilizando la espada de Gryffindor.\nA) Verdadero\nB) Falso",
+          "respuesta": "B) Falso"
+        },
+        {
+          "pregunta": "Sabiendo que en los 7 libros de Harry Potter se menciona a Harry 18,956 veces, a Ron 6,464 y a Hermione 5,486, ¿cuántas veces se menciona a Draco Malfoy?\nA) Entre 500 y 1000\nB) Entre 1000 y 1500\nC) Entre 1500 y 2000\nD) Más de 2000",
+          "respuesta": "B) Entre 1000 y 1500 (1,198 veces)"
+        },
+        {
+          "pregunta": "¿Quién fue el director de Hogwarts inmediatamente antes de Albus Dumbledore?",
+          "respuesta": "Armando Dippet"
+        }
+      ]
+    },
+    {
+      "nombre": "Harry Potter",
+      "preguntas": [
+        {
+          "pregunta": "¿A qué casa de Hogwarts pertenece Rubeus Hagrid?",
+          "respuesta": "Gryffindor"
+        },
+        {
+          "pregunta": "El Horrocrux escondido en la copa de Helga Hufflepuff fue destruido utilizando la espada de Gryffindor.\nA) Verdadero\nB) Falso",
+          "respuesta": "B) Falso"
+        },
+        {
+          "pregunta": "Sabiendo que en los 7 libros de Harry Potter se menciona a Harry 18,956 veces, a Ron 6,464 y a Hermione 5,486, ¿cuántas veces se menciona a Draco Malfoy?\nA) Entre 500 y 1000\nB) Entre 1000 y 1500\nC) Entre 1500 y 2000\nD) Más de 2000",
+          "respuesta": "B) Entre 1000 y 1500 (1,198 veces)"
+        },
+        {
+          "pregunta": "¿Quién fue el director de Hogwarts inmediatamente antes de Albus Dumbledore?",
+          "respuesta": "Armando Dippet"
+        }
+      ]
+    },
+    {
+      "nombre": "Datos",
+      "preguntas": [
+        {
+          "pregunta": "¿A qué casa de Hogwarts pertenece Rubeus Hagrid?",
+          "respuesta": "Gryffindor"
+        },
+        {
+          "pregunta": "El Horrocrux escondido en la copa de Helga Hufflepuff fue destruido utilizando la espada de Gryffindor.\nA) Verdadero\nB) Falso",
+          "respuesta": "B) Falso"
+        },
+        {
+          "pregunta": "Sabiendo que en los 7 libros de Harry Potter se menciona a Harry 18,956 veces, a Ron 6,464 y a Hermione 5,486, ¿cuántas veces se menciona a Draco Malfoy?\nA) Entre 500 y 1000\nB) Entre 1000 y 1500\nC) Entre 1500 y 2000\nD) Más de 2000",
+          "respuesta": "B) Entre 1000 y 1500 (1,198 veces)"
+        },
+        {
+          "pregunta": "¿Quién fue el director de Hogwarts inmediatamente antes de Albus Dumbledore?",
+          "respuesta": "Armando Dippet"
+        }
+      ]
+    },
+    {
+      "nombre": "Música",
+      "preguntas": [
+        {
+          "pregunta": "¿A qué casa de Hogwarts pertenece Rubeus Hagrid?",
+          "respuesta": "Gryffindor"
+        },
+        {
+          "pregunta": "El Horrocrux escondido en la copa de Helga Hufflepuff fue destruido utilizando la espada de Gryffindor.\nA) Verdadero\nB) Falso",
+          "respuesta": "B) Falso"
+        },
+        {
+          "pregunta": "Sabiendo que en los 7 libros de Harry Potter se menciona a Harry 18,956 veces, a Ron 6,464 y a Hermione 5,486, ¿cuántas veces se menciona a Draco Malfoy?\nA) Entre 500 y 1000\nB) Entre 1000 y 1500\nC) Entre 1500 y 2000\nD) Más de 2000",
+          "respuesta": "B) Entre 1000 y 1500 (1,198 veces)"
+        },
+        {
+          "pregunta": "¿Quién fue el director de Hogwarts inmediatamente antes de Albus Dumbledore?",
+          "respuesta": "Armando Dippet"
+        }
+      ]
+    },
+    {
+      "nombre": "Deportes",
+      "preguntas": [
+        {
+          "pregunta": "¿A qué casa de Hogwarts pertenece Rubeus Hagrid?",
+          "respuesta": "Gryffindor"
+        },
+        {
+          "pregunta": "El Horrocrux escondido en la copa de Helga Hufflepuff fue destruido utilizando la espada de Gryffindor.\nA) Verdadero\nB) Falso",
+          "respuesta": "B) Falso"
+        },
+        {
+          "pregunta": "Sabiendo que en los 7 libros de Harry Potter se menciona a Harry 18,956 veces, a Ron 6,464 y a Hermione 5,486, ¿cuántas veces se menciona a Draco Malfoy?\nA) Entre 500 y 1000\nB) Entre 1000 y 1500\nC) Entre 1500 y 2000\nD) Más de 2000",
+          "respuesta": "B) Entre 1000 y 1500 (1,198 veces)"
+        },
+        {
+          "pregunta": "¿Quién fue el director de Hogwarts inmediatamente antes de Albus Dumbledore?",
+          "respuesta": "Armando Dippet"
+        }
+      ]
+    }
+  ],
+  "equipos": [
+    "botti",
+    "birria"
+  ],
+  "minijuegos": [
+    {
+      "retos": [
+        {
+          "instrucciones": "",
+          "material": "",
+          "nombre": "",
+          "video": ""
+        },
+        {
+          "instrucciones": "",
+          "material": "",
+          "nombre": "",
+          "video": ""
+        },
+        {
+          "instrucciones": "",
+          "material": "",
+          "nombre": "",
+          "video": ""
+        }
+      ]
+    },
+    {
+      "retos": [
+        {
+          "instrucciones": "",
+          "material": "",
+          "nombre": "",
+          "video": ""
+        },
+        {
+          "instrucciones": "",
+          "material": "",
+          "nombre": "",
+          "video": ""
+        },
+        {
+          "instrucciones": "",
+          "material": "",
+          "nombre": "",
+          "video": ""
+        }
+      ]
+    },
+    {
+      "retos": [
+        {
+          "instrucciones": "Sostén un palito de paleta con la boca y apila 5 dados en la punta, uno por uno. La torre tiene que aguantar 3 segundos sin caerse.",
+          "material": "Palito de paleta grande y 5 dados (más algunos de repuesto)",
+          "nombre": "A Bit Dicey",
+          "video": "https://www.youtube.com/watch?v=T9fTtXdwc2w"
+        },
+        {
+          "instrucciones": "Con la cabeza hacia atrás, pon una galleta en tu frente. Sin usar las manos, muévela hasta tu boca solo con gestos de la cara. Si se cae, puedes intentarlo de nuevo con otra galleta.",
+          "material": "Galletas tipo Oreo (varias, por si se caen)",
+          "nombre": "Face the Cookie",
+          "video": "https://www.youtube.com/watch?v=THXXPe4O1bI"
+        },
+        {
+          "instrucciones": "Desde detrás de la línea, dispara ligas para tirar las cartas que están paradas en la mesa. Ganas si tiras todas antes de que se acabe el minuto.",
+          "material": "Ligas, cartas de una baraja y cinta para marcar la línea de tiro",
+          "nombre": "Ligas vs Cartas",
+          "video": "https://www.youtube.com/watch?v=ksr2JPk2MnM"
+        }
+      ]
+    },
+    {
+      "retos": [
+        {
+          "instrucciones": "",
+          "material": "",
+          "nombre": "",
+          "video": ""
+        },
+        {
+          "instrucciones": "",
+          "material": "",
+          "nombre": "",
+          "video": ""
+        },
+        {
+          "instrucciones": "",
+          "material": "",
+          "nombre": "",
+          "video": ""
+        }
+      ]
+    },
+    {
+      "retos": [
+        {
+          "instrucciones": "",
+          "material": "",
+          "nombre": "",
+          "video": ""
+        },
+        {
+          "instrucciones": "",
+          "material": "",
+          "nombre": "",
+          "video": ""
+        },
+        {
+          "instrucciones": "",
+          "material": "",
+          "nombre": "",
+          "video": ""
+        }
+      ]
+    },
+    {
+      "retos": [
+        {
+          "instrucciones": "",
+          "material": "",
+          "nombre": "",
+          "video": ""
+        },
+        {
+          "instrucciones": "",
+          "material": "",
+          "nombre": "",
+          "video": ""
+        },
+        {
+          "instrucciones": "",
+          "material": "",
+          "nombre": "",
+          "video": ""
+        }
+      ]
+    }
+  ],
+  "videoTemporizador": "https://www.youtube.com/watch?v=ebvtJCu33vM"
+}
