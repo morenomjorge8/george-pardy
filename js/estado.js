@@ -22,7 +22,7 @@ export const OPCIONES_EQUIPO = [
 ];
 export const IDS_EQUIPO = OPCIONES_EQUIPO.map(o => o.id);
 export const MINIJUEGOS = [
-  { nombre: '100 Mexicanos Dijeron', corto: '100 Mexicanos', emoji: '💯', color: '#E4007C', tinta: '#FFFFFF', desc: 'Adivinen las respuestas más populares, compitiendo contra el equipo rival.' },
+  { nombre: '100 Mexicanos Dijeron', corto: '100 Mexicanos', emoji: '💯', color: '#E4007C', tinta: '#FFFFFF', desc: 'Vean la pregunta en el video y adivinen las 3 respuestas más populares antes de juntar 3 strikes.', encuesta: true },
   { nombre: 'Tic-Tac-Boom', corto: 'Tic-Tac-Boom', emoji: '💣', color: '#FF6A13', tinta: '#12163A', desc: 'Pasa una persona de cada equipo. Se pasan la pelota por turnos diciendo una palabra con la sílaba. Pierde quien tenga la pelota cuando explote la bomba.', bomba: true },
   { nombre: 'Minuto para Ganar', corto: 'Minuto', emoji: '⏱️', color: '#FFB81C', tinta: '#12163A', desc: 'Completen el reto en 60 segundos.', segundos: 60 },
   { nombre: 'Password', corto: 'Password', emoji: '🔑', color: '#00A3AD', tinta: '#04232A', desc: 'Adivinen la palabra con las pistas de sus compañeros.' },
@@ -86,7 +86,7 @@ export function configBase() {
       nombre,
       preguntas: VALORES.map(() => ({ pregunta: '', respuesta: '' }))
     })),
-    minijuegos: MINIJUEGOS.map(() => ({ retos: [0, 1, 2].map(() => ({ nombre: '', instrucciones: '', material: '', video: '' })) })),
+    minijuegos: MINIJUEGOS.map(() => ({ retos: [0, 1, 2].map(() => ({ nombre: '', instrucciones: '', material: '', video: '', respuestas: ['', '', ''] })) })),
     videoTemporizador: '',
     videoTemporizadorInicio: 0,
     usarTimerYoutube: false,
@@ -105,6 +105,16 @@ export function normalizarReloj(r) {
     estado: r.estado,
     inicioEn: Number.isFinite(r.inicioEn) ? r.inicioEn : 0,
     restanteMs: Number.isFinite(r.restanteMs) ? Math.max(0, Math.min(600000, r.restanteMs)) : 60000
+  };
+}
+/* 100 Mexicanos: qué respuestas ya salieron, cuántos strikes y cómo terminó */
+export function normalizarEncuesta(x) {
+  if (!x || typeof x !== 'object') return null;
+  const rev = comoArreglo(x.reveladas) || [];
+  return {
+    reveladas: [0, 1, 2].map(k => rev[k] === true),
+    strikes: Number.isInteger(x.strikes) ? Math.max(0, Math.min(3, x.strikes)) : 0,
+    fin: x.fin === 'gano' || x.fin === 'perdio' ? x.fin : null
   };
 }
 const limpiarSilaba = s => texto(s).trim().toUpperCase().replace(/\s+/g, '').slice(0, 10);
@@ -151,7 +161,11 @@ export function normalizarConfig(raw) {
       const retos = (minijuegos[j] && comoArreglo(minijuegos[j].retos)) || [];
       return { retos: m.retos.map((r, x) => {
         const rr = retos[x];
-        return { nombre: texto(rr && rr.nombre), instrucciones: texto(rr && rr.instrucciones), material: texto(rr && rr.material), video: texto(rr && rr.video) };
+        const resp = (rr && comoArreglo(rr.respuestas)) || [];
+        return {
+          nombre: texto(rr && rr.nombre), instrucciones: texto(rr && rr.instrucciones), material: texto(rr && rr.material), video: texto(rr && rr.video),
+          respuestas: [0, 1, 2].map(k => texto(resp[k]))
+        };
       }) };
     });
   }
@@ -184,11 +198,12 @@ export function normalizarEstado(raw) {
       desfase: Number.isFinite(d.desfase) ? Math.max(-0.4, Math.min(0.4, d.desfase)) : 0,
       giroEn: Number.isFinite(d.giroEn) ? d.giroEn : 0,
       reloj: normalizarReloj(d.reloj),
-      bomba: normalizarBomba(d.bomba)
+      bomba: normalizarBomba(d.bomba),
+      encuesta: normalizarEncuesta(d.encuesta)
     };
   }
   const L = raw.minijuegoLibre;
-  if (L && CASILLAS.includes(L.casilla)) e.minijuegoLibre = { casilla: L.casilla, reloj: normalizarReloj(L.reloj), bomba: normalizarBomba(L.bomba) };
+  if (L && CASILLAS.includes(L.casilla)) e.minijuegoLibre = { casilla: L.casilla, reloj: normalizarReloj(L.reloj), bomba: normalizarBomba(L.bomba), encuesta: normalizarEncuesta(L.encuesta) };
   if (raw.eligiendoNombres && typeof raw.eligiendoNombres === 'object') e.eligiendoNombres = { turno: raw.eligiendoNombres.turno === 1 ? 1 : 0 };
   const v = raw.video;
   if (v && enlaceValido(v.url)) {
@@ -350,7 +365,7 @@ export function girar() {
   cambiarEstado({
     ...e,
     ruletaUsadas: [...e.ruletaUsadas, id],
-    dobleONada: { ...d, fase: 'jugando', casilla: id, desfase: Math.random() * 0.7 - 0.35, giroEn: ahora(), reloj: null, bomba: null }
+    dobleONada: { ...d, fase: 'jugando', casilla: id, desfase: Math.random() * 0.7 - 0.35, giroEn: ahora(), reloj: null, bomba: null, encuesta: null }
   });
 }
 export function resultadoDoble(gano) {
@@ -435,11 +450,60 @@ export function alternarBomba() {
   else bombaAccion('continuar');
 }
 
+/* ---------- 100 Mexicanos: las 3 más populares antes de 3 strikes ---------- */
+export const tieneEncuesta = d => !!(d && d.casilla && infoCasilla(d.casilla).juego.encuesta);
+const ENCUESTA_BASE = { reveladas: [false, false, false], strikes: 0, fin: null };
+export const encuestaDe = d => (d && d.encuesta) || ENCUESTA_BASE;
+function cambiarEncuesta(f, crear = false) {
+  const d = juegoConReloj();
+  if (!tieneEncuesta(d) || (!d.encuesta && !crear)) return;
+  const x = encuestaDe(d);
+  const n = f({ reveladas: [...x.reveladas], strikes: x.strikes, fin: x.fin });
+  if (n) cambiarJuegoActivo({ ...d, encuesta: n });
+}
+/* Muestra el tablero en el proyector, todavía sin respuestas */
+export function encuestaMostrar() { cambiarEncuesta(x => x, true); }
+/* Al destapar la tercera antes de 3 strikes, ganan; después de perder solo se enseñan */
+export function encuestaRevelar(k) {
+  cambiarEncuesta(x => {
+    if (![0, 1, 2].includes(k) || x.reveladas[k]) return null;
+    x.reveladas[k] = true;
+    if (!x.fin && x.reveladas.every(Boolean)) x.fin = 'gano';
+    return x;
+  });
+}
+export function encuestaStrike() {
+  cambiarEncuesta(x => {
+    if (x.fin || x.strikes >= 3) return null;
+    x.strikes++;
+    if (x.strikes >= 3) x.fin = 'perdio';
+    return x;
+  });
+}
+/* Corregir un error del moderador */
+export function encuestaOcultar(k) {
+  cambiarEncuesta(x => {
+    if (!x.reveladas[k]) return null;
+    x.reveladas[k] = false;
+    if (x.fin === 'gano') x.fin = null;
+    return x;
+  });
+}
+export function encuestaQuitarStrike() {
+  cambiarEncuesta(x => {
+    if (!x.strikes) return null;
+    x.strikes--;
+    if (x.fin === 'perdio') x.fin = null;
+    return x;
+  });
+}
+export function encuestaReiniciar() { cambiarEncuesta(() => ({ ...ENCUESTA_BASE, reveladas: [false, false, false] })); }
+
 /* ---------- Minijuego libre: no suma puntos ni gasta casillas ---------- */
 export function abrirLibre(id) {
   const e = E();
   if (!CASILLAS.includes(id) || e.abierta || e.dobleONada || e.eligiendoNombres) return;
-  cambiarEstado({ ...e, minijuegoLibre: { casilla: id, reloj: null, bomba: null } });
+  cambiarEstado({ ...e, minijuegoLibre: { casilla: id, reloj: null, bomba: null, encuesta: null } });
 }
 export function cerrarLibre() {
   if (!E().minijuegoLibre) return;

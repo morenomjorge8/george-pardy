@@ -52,6 +52,9 @@ export function sonido(nombre) {
   else if (nombre === 'alto') { tono(990, 0.15, { tipo: 'triangle', vol: 0.3 }); tono(1320, 0.35, { tipo: 'triangle', vol: 0.3, cuando: 0.13 }); }
   else if (nombre === 'mecha') { tono(2300, 0.045, { tipo: 'square', vol: 0.1 }); tono(1150, 0.06, { tipo: 'triangle', vol: 0.12 }); }
   else if (nombre === 'explosion') explosion();
+  else if (nombre === 'acierto') { tono(1046, 0.16, { tipo: 'triangle', vol: 0.3 }); tono(1568, 0.5, { tipo: 'triangle', vol: 0.3, cuando: 0.12 }); }
+  else if (nombre === 'triunfo') { [523, 659, 784, 1046].forEach((f, i) => tono(f, i === 3 ? 0.7 : 0.16, { tipo: 'triangle', vol: 0.3, cuando: i * 0.13 })); }
+  else if (nombre === 'strike') { tono(98, 0.9, { tipo: 'sawtooth', vol: 0.35 }); tono(104, 0.9, { tipo: 'square', vol: 0.15 }); }
 }
 /* Ruido que se apaga y se vuelve grave, más un golpe de bajo */
 function explosion() {

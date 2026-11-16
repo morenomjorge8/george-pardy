@@ -223,6 +223,21 @@ button.casilla:hover{background:var(--tile-hover)}
 .ttb-boom-texto{margin:0;font-family:var(--display);color:#FF6A13;font-size:clamp(3rem,16vmin,12rem);line-height:1;text-shadow:0 .06em 0 var(--rosa)}
 .doble:has(.ttb-explosion){animation:ttb-destello 1s ease-out}
 @keyframes ttb-destello{0%{background:#FFF4D6}25%{background:#FF6A13}100%{background:var(--stage-deep)}}
+/* 100 Mexicanos en el proyector */
+.enc-tablero{list-style:none;margin:0;padding:1.2vmin;display:grid;gap:1vmin;width:min(80vmin,86vw);background:var(--stage);border:.5vmin solid var(--oro);border-radius:1.6vmin}
+.enc-fila{display:grid;grid-template-columns:9vmin 1fr;align-items:center;min-height:9vmin;border-radius:1vmin;background:var(--tile);overflow:hidden}
+.enc-num{display:grid;place-items:center;height:100%;font-family:var(--display);font-size:clamp(1.4rem,5vmin,3.6rem);color:var(--oro);background:var(--tile-used)}
+.enc-resp{padding:0 2.4vmin;font-family:var(--display);font-size:clamp(1.2rem,4.6vmin,3.4rem);color:var(--papel);text-align:left;line-height:1.05}
+.enc-fila.revelada{background:var(--rosa)}
+.enc-fila.revelada .enc-resp{animation:golpe .45s cubic-bezier(.2,.9,.3,1.3)}
+.enc-strikes{display:flex;gap:2vmin}
+.enc-x{display:grid;place-items:center;width:9vmin;height:9vmin;border-radius:1.2vmin;border:.4vmin solid var(--tile);font-family:var(--display);font-size:clamp(1.6rem,6vmin,4.4rem);color:var(--tile);line-height:1}
+.enc-x.activa{border-color:#E8202A;background:#E8202A;color:#fff}
+.enc-fin{margin:0;font-family:var(--display);font-size:clamp(1.6rem,7vmin,5rem);line-height:1;animation:golpe .5s cubic-bezier(.2,.9,.3,1.3)}
+.enc-fin.gano{color:var(--oro);text-shadow:0 .06em 0 var(--rosa)}
+.enc-fin.perdio{color:#FF4A52}
+.enc-flash{position:fixed;inset:0;z-index:50;display:grid;place-items:center;font-family:var(--display);font-size:38vmin;letter-spacing:4vmin;color:#E8202A;text-shadow:0 0 6vmin rgba(0,0,0,.6);pointer-events:none;animation:enc-flash 1.3s ease-out forwards}
+@keyframes enc-flash{0%{opacity:0;transform:scale(1.6)}12%{opacity:1;transform:scale(1)}75%{opacity:1}100%{opacity:0}}
 .reloj-aviso{margin:0;padding:.6vmin 1.6vmin;border-radius:999px;background:var(--rosa);color:#fff;font-weight:700;font-size:clamp(.85rem,2.2vmin,1.4rem)}
 
 /* Controles que aparecen al mover el mouse (plan B) */
@@ -312,6 +327,14 @@ body.con-mouse .auto,.auto:focus-within{opacity:1;pointer-events:auto}
 .ttb-modo-chico{display:inline-block;margin-right:.3rem;padding:.05rem .55rem;border-radius:.4rem;background:var(--modo);color:var(--modo-tinta);font-family:var(--display);font-weight:400}
 .ctl-bomba-botones{display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:.5rem}
 .ctl-bomba-botones:empty{display:none}
+.enc-ctl{list-style:none;margin:0;padding:0;display:grid;gap:.45rem}
+.enc-ctl-fila{display:grid;grid-template-columns:2rem 1fr auto;align-items:center;gap:.6rem;padding:.35rem .5rem;border-radius:.55rem;background:var(--surface)}
+.enc-ctl-fila b{font-family:var(--display);font-weight:400;color:var(--accent);text-align:center}
+.enc-ctl-fila span{font-weight:700}
+.enc-ctl-fila.revelada{outline:2px solid var(--rosa)}
+.enc-ctl-fila .btn{min-height:44px;padding:.3rem 1rem}
+.enc-edit{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.45rem}
+@media (max-width:640px){.enc-edit{grid-template-columns:1fr}}
 .fila-reto{display:grid;grid-template-columns:3.6rem 1fr;gap:.6rem;align-items:start;margin-top:.8rem}
 .fila-reto .valor{font-family:var(--display);color:var(--accent);padding-top:.6rem}
 .reto-campos{display:grid;gap:.45rem}

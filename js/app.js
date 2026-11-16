@@ -9,7 +9,8 @@ import {
   decidirDoble, girar, resultadoDoble, cerrarDoble, relojAccion, alternarReloj,
   abrirLibre, cerrarLibre, abrirNombres, cerrarNombres, turnoNombres, asignarNombre, elegirEquipo,
   SILABAS_BASE, tieneBomba, bombaDe, modoBomba, bombaGirando, bombaExploto, silabaDe, silabasDisponibles,
-  bombaGirar, bombaSilaba, bombaAccion, alternarBomba
+  bombaGirar, bombaSilaba, bombaAccion, alternarBomba,
+  tieneEncuesta, encuestaDe, encuestaMostrar, encuestaRevelar, encuestaStrike, encuestaOcultar, encuestaQuitarStrike, encuestaReiniciar
 } from './estado.js';
 import * as sync from './sync.js';
 import { renderRuleta, estaGirando, marcarFase } from './ruleta.js';
@@ -193,6 +194,8 @@ function renderPantalla() {
   renderDobleONada();
   renderLibre();
   renderNombresPantalla();
+  const dd = estado.dobleONada;
+  avisosEncuesta(estado.minijuegoLibre || (dd && dd.fase === 'jugando' ? dd : null));
 }
 
 function platosHtml(v) {
@@ -289,6 +292,75 @@ function bombaControlHtml(d) {
       <div class="ctl-bomba-botones">${botones}</div>
     </div>`;
 }
+/* ---------- 100 Mexicanos ---------- */
+function encuestaPantallaHtml(d, lema) {
+  const reto = retoDe(d.casilla), x = encuestaDe(d);
+  const filas = [0, 1, 2].map(k => `<li class="enc-fila${x.reveladas[k] ? ' revelada' : ''}">
+      <span class="enc-num">${k + 1}</span><span class="enc-resp">${x.reveladas[k] ? esc(reto.respuestas[k].trim() || '—') : ''}</span>
+    </li>`).join('');
+  const strikes = [0, 1, 2].map(k => `<span class="enc-x${k < x.strikes ? ' activa' : ''}" aria-hidden="true">✗</span>`).join('');
+  const fin = x.fin ? `<p class="enc-fin ${x.fin}">${x.fin === 'gano' ? '¡Encontraron las tres!' : '¡Tres strikes!'}</p>` : '';
+  return `<p class="reloj-titulo" style="--juego:#E4007C"><span class="emoji" aria-hidden="true">💯</span> ${esc(reto.nombre.trim() || '100 Mexicanos')}</p>
+    <ol class="enc-tablero">${filas}</ol>
+    <div class="enc-strikes" role="img" aria-label="${x.strikes} de 3 strikes">${strikes}</div>
+    ${fin}
+    ${lema}`;
+}
+function botonesEncuestaPantalla(d) {
+  if (!d.encuesta) return '<button type="button" class="btn-escenario" data-accion="enc-mostrar">Mostrar tablero <kbd>Espacio</kbd></button>';
+  const x = encuestaDe(d);
+  let h = [0, 1, 2].filter(k => !x.reveladas[k]).map(k => `<button type="button" class="btn-escenario" data-accion="enc-revelar" data-k="${k}">Destapar ${k + 1} <kbd>${k + 1}</kbd></button>`).join('');
+  if (!x.fin) h += '<button type="button" class="btn-escenario" data-accion="enc-strike">Strike <kbd>X</kbd></button>';
+  return h;
+}
+function encuestaControlHtml(d) {
+  const reto = retoDe(d.casilla), x = encuestaDe(d);
+  if (!d.encuesta) {
+    return `<div class="ctl-bomba"><p class="ctl-nota">Pongan el video con la pregunta y luego muestra el tablero en el proyector.</p>
+      <div class="ctl-bomba-botones"><button type="button" class="btn btn-primario" data-accion="enc-mostrar">Mostrar tablero</button></div></div>`;
+  }
+  const filas = [0, 1, 2].map(k => {
+    const r = reto.respuestas[k].trim() || 'Sin respuesta escrita';
+    return `<li class="enc-ctl-fila${x.reveladas[k] ? ' revelada' : ''}">
+        <b>${k + 1}</b><span>${esc(r)}</span>
+        ${x.reveladas[k]
+          ? `<button type="button" class="btn-texto" data-accion="enc-ocultar" data-k="${k}">Ocultar</button>`
+          : `<button type="button" class="btn btn-primario" data-accion="enc-revelar" data-k="${k}">Destapar</button>`}
+      </li>`;
+  }).join('');
+  let estado = `Strikes: ${x.strikes} de 3.`;
+  if (x.fin === 'gano') estado = '¡Encontraron las tres! Ganaron el reto.';
+  else if (x.fin === 'perdio') estado = '¡Tres strikes! Perdieron el reto. Puedes destapar las que faltan.';
+  return `<div class="ctl-bomba">
+      <p class="ttb-rotulo">Las 3 más populares (solo tú las ves)</p>
+      <ol class="enc-ctl">${filas}</ol>
+      <p class="ctl-nota">${estado}</p>
+      <div class="ctl-bomba-botones">
+        ${x.fin ? '' : '<button type="button" class="btn btn-alerta" data-accion="enc-strike">✗ Strike</button>'}
+        ${x.strikes ? '<button type="button" class="btn" data-accion="enc-quitar-strike">Quitar un strike</button>' : ''}
+        <button type="button" class="btn" data-accion="enc-reiniciar">Reiniciar tablero</button>
+      </div>
+    </div>`;
+}
+/* Sonido y X grande en el proyector cuando cambia el tablero */
+let encuestaVista = null;
+function avisosEncuesta(d) {
+  if (!d || !tieneEncuesta(d) || !d.encuesta) { encuestaVista = null; return; }
+  const x = encuestaDe(d), clave = d.casilla, n = x.reveladas.filter(Boolean).length;
+  const antes = encuestaVista && encuestaVista.clave === clave ? encuestaVista : null;
+  if (antes && vistaActual() === 'pantalla') {
+    if (x.strikes > antes.strikes) {
+      sonido('strike');
+      const f = document.createElement('div');
+      f.className = 'enc-flash'; f.setAttribute('aria-hidden', 'true');
+      f.textContent = '✗'.repeat(x.strikes);
+      document.body.appendChild(f);
+      setTimeout(() => f.remove(), 1300);
+    } else if (n > antes.n) sonido(x.fin === 'gano' && antes.fin !== 'gano' ? 'triunfo' : 'acierto');
+  }
+  encuestaVista = { clave, strikes: x.strikes, n, fin: x.fin };
+}
+
 /* Línea del reto: en Tic-Tac-Boom muestra la sílaba */
 function lineaReto(d) {
   const { juego: mj, n } = infoCasilla(d.casilla);
@@ -337,9 +409,12 @@ function renderLibre() {
   const conReloj = tieneReloj(L);
   const r = conReloj ? relojDe(L) : null;
   const conBomba = tieneBomba(L);
+  const conEncuesta = tieneEncuesta(L);
   let cuerpo;
   if (conBomba && bombaDe(L).modo) {
     cuerpo = bombaPantallaHtml(L, '');
+  } else if (conEncuesta && L.encuesta) {
+    cuerpo = encuestaPantallaHtml(L, '');
   } else if (conReloj && r.estado !== 'listo') {
     cuerpo = `<p class="reloj-titulo" style="--juego:${mj.color}"><span class="emoji" aria-hidden="true">${mj.emoji}</span> ${esc(nombreReto || mj.nombre)}</p>
       ${relojHtml(L, 'reloj-cara')}
@@ -353,7 +428,7 @@ function renderLibre() {
   }
   const cu = $('#libre-cuerpo');
   if (cuerpo !== libreHtmlPrevio) { cu.innerHTML = cuerpo; libreHtmlPrevio = cuerpo; animarRuedasBomba(); }
-  $('#libre-controles').innerHTML = (conReloj && enlaceTimer() ? botonTimer() : '') + (enlaceVideo(reto) ? botonVideo(enlaceVideo(reto)) : '') + (conReloj ? botonesRelojPantalla(L) : '') + (conBomba ? botonesBombaPantalla(L) : '') +
+  $('#libre-controles').innerHTML = (conReloj && enlaceTimer() ? botonTimer() : '') + (enlaceVideo(reto) ? botonVideo(enlaceVideo(reto)) : '') + (conReloj ? botonesRelojPantalla(L) : '') + (conBomba ? botonesBombaPantalla(L) : '') + (conEncuesta ? botonesEncuestaPantalla(L) : '') +
     '<button type="button" class="btn-escenario" data-accion="libre-cerrar">Cerrar <kbd>Esc</kbd></button>';
   ov.hidden = false;
 }
@@ -386,8 +461,10 @@ function renderDobleONada() {
     const modoReloj = conReloj && r.estado !== 'listo';
     const conBomba = revelado && tieneBomba(d);
     const modoBombaVisible = conBomba && !!bombaDe(d).modo;
-    $('#don-ruleta').hidden = modoReloj || modoBombaVisible;
-    $('#don-reloj').hidden = !(modoReloj || modoBombaVisible);
+    const conEncuesta = revelado && tieneEncuesta(d);
+    const modoEncuesta = conEncuesta && !!d.encuesta;
+    $('#don-ruleta').hidden = modoReloj || modoBombaVisible || modoEncuesta;
+    $('#don-reloj').hidden = !(modoReloj || modoBombaVisible || modoEncuesta);
     let lado;
     if (revelado) {
       const { juego: mj } = infoCasilla(d.casilla);
@@ -405,6 +482,14 @@ function renderDobleONada() {
           const zb = $('#don-reloj');
           const hb = bombaPantallaHtml(d, `<p class="don-lema reloj-lema">${htmlEquipo(d.equipo)} se juega ${NUM.format(v)} puntos.</p>`);
           if (zb.dataset.html !== hb) { zb.innerHTML = hb; zb.dataset.html = hb; animarRuedasBomba(); }
+        }
+      }
+      if (conEncuesta) {
+        botones = botonesEncuestaPantalla(d) + botones;
+        if (modoEncuesta) {
+          const ze = $('#don-reloj');
+          const he = encuestaPantallaHtml(d, `<p class="don-lema reloj-lema">${htmlEquipo(d.equipo)} se juega ${NUM.format(v)} puntos.</p>`);
+          if (ze.dataset.html !== he) { ze.innerHTML = he; ze.dataset.html = he; }
         }
       }
       if (enlaceVideo(reto)) botones = botonVideo(enlaceVideo(reto)) + botones;
@@ -544,6 +629,7 @@ function renderControlLibre(L) {
     ${avisoVideoCtl(reto)}`;
   if (tieneReloj(L)) h += controlRelojHtml(L);
   if (tieneBomba(L)) h += bombaControlHtml(L);
+  if (tieneEncuesta(L)) h += encuestaControlHtml(L);
   h += '<button type="button" class="btn btn-primario" data-accion="libre-cerrar">Cerrar minijuego</button>';
   $('#ctl-libre').innerHTML = h;
 }
@@ -581,6 +667,7 @@ function renderControlDoble(d) {
       <p class="ctl-nota">Espera a que la ruleta se detenga en el proyector antes de anunciarlo.</p>`;
       if (tieneReloj(d)) h += controlRelojHtml(d);
       if (tieneBomba(d)) h += bombaControlHtml(d);
+      if (tieneEncuesta(d)) h += encuestaControlHtml(d);
     } else {
       h += `<p class="ctl-texto">${htmlEquipo(d.equipo)} se juega ${NUM.format(v)} puntos.</p>
       <p class="ctl-nota">Ya no quedan casillas en la ruleta: elijan un minijuego y marca el resultado.</p>`;
@@ -695,7 +782,8 @@ function renderEditor() {
           <input type="text" maxlength="60" data-campo="reto-nombre" data-j="${j}" data-n="${x}" placeholder="${m.bomba ? `Sílaba (por ejemplo ${SILABAS_BASE[x]})` : 'Nombre del reto'}" aria-label="${m.bomba ? 'Sílaba' : 'Nombre'} del ${et}" value="${esc(r.nombre)}">
           <textarea rows="2" maxlength="400" data-campo="reto-instrucciones" data-j="${j}" data-n="${x}" placeholder="Instrucciones: qué hay que hacer para ganar" aria-label="Instrucciones del ${et}">${esc(r.instrucciones)}</textarea>
           <input type="text" maxlength="160" data-campo="reto-material" data-j="${j}" data-n="${x}" placeholder="Material" aria-label="Material del ${et}" value="${esc(r.material)}">
-          <input type="url" maxlength="300" data-campo="reto-video" data-j="${j}" data-n="${x}" placeholder="Enlace del video de explicación (YouTube)" aria-label="Video del ${et}" value="${esc(r.video)}">
+          <input type="url" maxlength="300" data-campo="reto-video" data-j="${j}" data-n="${x}" placeholder="${m.encuesta ? 'Video con la pregunta (YouTube, con el minuto: …&t=182s)' : 'Enlace del video de explicación (YouTube)'}" aria-label="Video del ${et}" value="${esc(r.video)}">
+          ${m.encuesta ? `<div class="enc-edit">${[0, 1, 2].map(k => `<input type="text" maxlength="60" data-campo="reto-respuesta" data-j="${j}" data-n="${x}" data-k="${k}" placeholder="Respuesta ${k + 1}" aria-label="Respuesta ${k + 1} del ${et}" value="${esc(r.respuestas[k])}">`).join('')}</div>` : ''}
         </div>
       </div>`;
     });
@@ -743,6 +831,7 @@ document.addEventListener('input', e => {
     case 'reto-video': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].video = v; break;
     case 'video-temporizador': nc.videoTemporizador = v; break;
     case 'silabas-respaldo': nc.silabasRespaldo = v; break;
+    case 'reto-respuesta': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].respuestas[+el.dataset.k] = v; break;
     default: return;
   }
   actualizarConfig(nc);
@@ -781,6 +870,12 @@ document.addEventListener('click', e => {
     case 'reloj-detener': relojAccion('detener'); break;
     case 'reloj-reiniciar': relojAccion('reiniciar'); break;
     case 'probar-sonido': prepararAudio(); setTimeout(() => sonido('inicio'), 60); break;
+    case 'enc-mostrar': encuestaMostrar(); break;
+    case 'enc-revelar': encuestaRevelar(+b.dataset.k); break;
+    case 'enc-ocultar': encuestaOcultar(+b.dataset.k); break;
+    case 'enc-strike': encuestaStrike(); break;
+    case 'enc-quitar-strike': encuestaQuitarStrike(); break;
+    case 'enc-reiniciar': encuestaReiniciar(); break;
     case 'bomba-girar': bombaGirar(); break;
     case 'bomba-silaba': bombaSilaba(b.dataset.silaba); break;
     case 'bomba-encender': bombaAccion('encender'); break;
@@ -814,6 +909,13 @@ document.addEventListener('keydown', e => {
     if (enlace) { e.preventDefault(); window.open(enlace.href, '_blank', 'noopener'); return; }
   }
   if (estado.eligiendoNombres) { if (k === 'Escape') cerrarNombres(); return; }
+  /* 100 Mexicanos: Espacio muestra el tablero, 1-3 destapan, X marca strike */
+  const activo = estado.minijuegoLibre || (estado.dobleONada && estado.dobleONada.fase === 'jugando' ? estado.dobleONada : null);
+  if (tieneEncuesta(activo) && !estaGirando()) {
+    if (k === ' ' && !activo.encuesta) { e.preventDefault(); encuestaMostrar(); return; }
+    if (activo.encuesta && ['1', '2', '3'].includes(k)) { encuestaRevelar(+k - 1); return; }
+    if (activo.encuesta && (k === 'x' || k === 'X')) { encuestaStrike(); return; }
+  }
   if (estado.minijuegoLibre) {
     if (k === ' ') { e.preventDefault(); if (tieneBomba(estado.minijuegoLibre)) alternarBomba(); else alternarReloj(); }
     else if (k === 'Escape') cerrarLibre();

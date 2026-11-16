@@ -102,6 +102,13 @@ Cada reto tiene `nombre`, `instrucciones` (se ven en el proyector), `material` (
 
 Retos ya definidos (Minuto para Ganar): 1 A Bit Dicey, 2 Face the Cookie, 3 Ligas vs Cartas. Están en `datos/config-inicial.json`.
 
+### 100 Mexicanos Dijeron
+- Cada reto es una pregunta del programa: `video` es el enlace de YouTube con el minuto donde empieza la pregunta (`&t=…s`), `instrucciones` lleva la pregunta y `respuestas` (3 textos) las tres más populares. `material` trae el tablero completo para el moderador.
+- **Gana** el equipo que adivina las 3 respuestas más populares **antes de juntar 3 strikes**. Con 3 strikes pierde.
+- El iPad (o Espacio) muestra el tablero en el proyector: 3 lugares tapados y 3 casillas de strike. El moderador destapa cada respuesta (iPad o teclas 1–3) y marca strikes (iPad o tecla X; X grande y zumbido en el proyector). Al ganar aparece "¡Encontraron las tres!"; con 3 strikes, "¡Tres strikes!", y aún se pueden destapar las que faltan. Hay "Ocultar", "Quitar un strike" y "Reiniciar tablero" para corregir.
+- Estado: `encuesta: null | { reveladas: [bool×3], strikes: 0–3, fin: null|'gano'|'perdio' }` dentro de `dobleONada` o `minijuegoLibre`.
+- Preguntas actuales (episodio 1 de *100 Mexicanos VIP*, canal oficial): 3:02 "se lo está llevando…", 7:52 bebé que llora, 19:41 solo en el elevador.
+
 ### Tic-Tac-Boom
 - Pasa una persona de cada equipo al frente. Se pasan una pelota por turnos y cada quien dice una palabra con la sílaba. Pierde quien tenga la pelota cuando explota la bomba.
 - Sílabas: el nombre de cada reto es su sílaba (reto 1 CON, 2 TRA, 3 SAL). `config.silabasRespaldo` (texto separado por comas, por defecto `"PAR, RES"`) da sílabas de respaldo; el iPad puede cambiar la sílaba en cualquier momento.
@@ -248,7 +255,7 @@ Después de cada paso, abre la página localmente (por ejemplo con `npx serve` o
 ## 11. Pendientes del plan (no inventar; preguntar al usuario)
 
 - Escribir las 20 preguntas definitivas.
-- Definir las condiciones de victoria de 100 Mexicanos Dijeron y Password. (Tic-Tac-Boom ya está definido.)
+- Definir la condición de victoria de Password. (Tic-Tac-Boom y 100 Mexicanos ya están definidos.)
 - Escribir los retos de los otros cinco minijuegos (15 en total).
 - Ligas vs Cartas: cuántas cartas y a qué distancia se dispara.
 - Opción pendiente de decidir: poder elegir el reto a mano durante un Doble o Nada en lugar de girar.
