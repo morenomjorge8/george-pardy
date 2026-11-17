@@ -226,10 +226,12 @@ function controlRelojHtml(d) {
 
 /* ---------- Tic-Tac-Boom ---------- */
 const comillas = s => `“${esc(s)}”`;
+/* Sin sílaba (s vacía) se dice "la sílaba": así el proyector no la revela antes de iniciar */
 function reglaBomba(m, s) {
-  if (m.id === 'tic') return `una palabra que <b>empiece</b> con ${comillas(s)}`;
-  if (m.id === 'tac') return `una palabra que <b>tenga</b> ${comillas(s)} en cualquier parte`;
-  return `una palabra que <b>termine</b> con ${comillas(s)}`;
+  const sil = s ? comillas(s) : 'la sílaba';
+  if (m.id === 'tic') return `una palabra que <b>empiece</b> con ${sil}`;
+  if (m.id === 'tac') return `una palabra que <b>tenga</b> ${sil} en cualquier parte`;
+  return `una palabra que <b>termine</b> con ${sil}`;
 }
 const avisoAudio = '<p class="reloj-aviso" data-aviso-audio hidden>Haz clic en esta pantalla para activar el sonido.</p>';
 /* Lo que ve el proyector una vez que se giró la ruleta chica. Nunca muestra el tiempo. */
@@ -237,8 +239,7 @@ function bombaPantallaHtml(d, lema) {
   const b = bombaDe(d), m = modoBomba(b.modo), s = silabaDe(d);
   if (bombaGirando(b)) {
     return `<p class="reloj-titulo" style="--juego:#FF6A13">¿TIC, TAC o BOOM?</p>
-      ${ruedaBombaHtml(b)}
-      <p class="ttb-silaba-chica">Sílaba: <b>${esc(s)}</b></p>`;
+      ${ruedaBombaHtml(b)}`;
   }
   if (bombaExploto(b)) {
     return `<div class="ttb-explosion">
@@ -248,10 +249,12 @@ function bombaPantallaHtml(d, lema) {
         ${lema}
       </div>`;
   }
-  const estados = { listo: 'Pasen al frente con la pelota.', corriendo: '¡La bomba está encendida!', detenido: 'Bomba en pausa.' };
-  return `${b.estado === 'listo' ? '' : `<p class="ttb-bomba emoji${b.estado === 'corriendo' ? ' encendida' : ''}" aria-hidden="true">💣</p>`}
-    <div class="ttb-fila"><p class="ttb-modo" style="--modo:${m.color}">${m.nombre}</p><p class="ttb-silaba">${esc(s)}</p></div>
-    <p class="ttb-regla">Digan ${reglaBomba(m, s)}.</p>
+  /* La sílaba solo aparece al iniciar; antes se ve un "?" */
+  const estados = { listo: 'La sílaba aparece cuando empiece el juego.', corriendo: '¡La bomba está encendida!', detenido: 'Bomba en pausa.' };
+  const oculta = b.estado === 'listo';
+  return `${oculta ? '' : `<p class="ttb-bomba emoji${b.estado === 'corriendo' ? ' encendida' : ''}" aria-hidden="true">💣</p>`}
+    <div class="ttb-fila"><p class="ttb-modo" style="--modo:${m.color}">${m.nombre}</p><p class="ttb-silaba${oculta ? ' oculta' : ''}">${oculta ? '?' : esc(s)}</p></div>
+    <p class="ttb-regla">Digan ${reglaBomba(m, oculta ? '' : s)}.</p>
     <p class="reloj-estado">${estados[b.estado]}</p>
     ${lema}
     ${avisoAudio}`;
@@ -264,7 +267,7 @@ function botonesBombaPantalla(d) {
   if (b.estado === 'corriendo') return btn('bomba-pausar', 'Pausar <kbd>Espacio</kbd>');
   if (b.estado === 'detenido') return btn('bomba-continuar', 'Continuar <kbd>Espacio</kbd>') + btn('bomba-reiniciar', 'Otra ronda');
   if (!b.modo) return btn('bomba-girar', 'Girar Tic-Tac-Boom <kbd>Espacio</kbd>');
-  return btn('bomba-encender', 'Encender la bomba <kbd>Espacio</kbd>') + btn('bomba-girar', 'Girar otra vez');
+  return btn('bomba-encender', 'Iniciar <kbd>Espacio</kbd>') + btn('bomba-girar', 'Girar otra vez');
 }
 function bombaControlHtml(d) {
   const b = bombaDe(d), m = modoBomba(b.modo), s = silabaDe(d);
@@ -283,7 +286,7 @@ function bombaControlHtml(d) {
   else if (b.estado === 'corriendo') botones = btn('bomba-pausar', 'Pausar la bomba', true);
   else if (b.estado === 'detenido') botones = btn('bomba-continuar', 'Continuar', true) + btn('bomba-reiniciar', 'Otra ronda');
   else if (!m) botones = btn('bomba-girar', 'Girar Tic-Tac-Boom', true);
-  else botones = btn('bomba-encender', 'Encender la bomba', true) + btn('bomba-girar', 'Girar otra vez');
+  else botones = btn('bomba-encender', 'Iniciar: mostrar sílaba y encender bomba', true) + btn('bomba-girar', 'Girar otra vez');
   return `<div class="ctl-bomba">
       <p class="ttb-rotulo">Sílaba</p>
       <div class="ttb-silabas">${silabasDisponibles().map(x => `<button type="button" class="ttb-chip" data-accion="bomba-silaba" data-silaba="${esc(x)}" aria-pressed="${x === s}">${esc(x)}</button>`).join('')}</div>
@@ -374,7 +377,7 @@ function avisosEncuesta(d) {
 function lineaReto(d) {
   const { juego: mj, n } = infoCasilla(d.casilla);
   const nombre = retoDe(d.casilla).nombre.trim();
-  if (mj.bomba) return `Reto ${n} · Sílaba: ${esc(silabaDe(d))}`;
+  if (mj.bomba) return `Reto ${n} de 3`; /* la sílaba no se revela antes de iniciar */
   return nombre ? `Reto ${n}: ${esc(nombre)}` : `Reto ${n} de 3`;
 }
 

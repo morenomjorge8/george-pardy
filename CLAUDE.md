@@ -111,7 +111,8 @@ Retos ya definidos (Minuto para Ganar): 1 A Bit Dicey, 2 Face the Cookie, 3 Liga
 - Preguntas actuales: 1) episodio 1 de *100 Mexicanos VIP* (DYxFbqXEfUQ) en el 2:10, "se lo está llevando…"; 2) mismo episodio en el 7:52, bebé que llora; 3) b7eEKcagddY en el 3:47, "¿qué te haría sospechar que te están poniendo el cuerno?".
 
 ### Tic-Tac-Boom
-- Pasa una persona de cada equipo al frente. Se pasan una pelota por turnos y cada quien dice una palabra con la sílaba. Pierde quien tenga la pelota cuando explota la bomba.
+- Pasan 4 personas al frente, 2 de cada equipo. Se pasan una pelota por turnos y cada quien dice una palabra con la sílaba. Pierde quien tenga la pelota cuando explota la bomba.
+- Orden en el proyector: 1) reglas, **sin la sílaba**; 2) ruleta TIC/TAC/BOOM (tampoco muestra la sílaba; después se ve el modo con un "?"); 3) al tocar **Iniciar** aparece la sílaba y se enciende la bomba. El iPad sí ve la sílaba desde el principio.
 - Sílabas: el nombre de cada reto es su sílaba (reto 1 CON, 2 TRA, 3 SAL). `config.silabasRespaldo` (texto separado por comas, por defecto `"PAR, RES"`) da sílabas de respaldo; el iPad puede cambiar la sílaba en cualquier momento.
 - Ruleta chica TIC / TAC / BOOM (se gira desde el iPad o con Espacio, 3.2 s): **TIC** = la palabra empieza con la sílaba; **TAC** = la tiene en cualquier parte; **BOOM** = termina con la sílaba. El giro se decide una vez y se guarda (`modo`, `giroEn`, `desfase`), como la ruleta grande.
 - Bomba: al encenderla se sortea un tiempo **aleatorio entre 30 y 45 s** (`duracionMs`). **Nunca se muestra el tiempo restante**, ni en el proyector ni en el iPad. En el proyector suena una mecha "ti… ti… titi… tititi" que se acelera, y al llegar a 0 suena una explosión y aparece "¡BOOM!". Se puede pausar, continuar y jugar otra ronda.

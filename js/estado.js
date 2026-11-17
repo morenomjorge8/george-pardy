@@ -23,7 +23,7 @@ export const OPCIONES_EQUIPO = [
 export const IDS_EQUIPO = OPCIONES_EQUIPO.map(o => o.id);
 export const MINIJUEGOS = [
   { nombre: '100 Mexicanos Dijeron', corto: '100 Mexicanos', emoji: '💯', color: '#E4007C', tinta: '#FFFFFF', desc: 'Vean la pregunta en el video. Ganan si encuentran las 3 respuestas más populares antes de juntar 3 strikes; una respuesta que no está en el tablero es strike.', encuesta: true },
-  { nombre: 'Tic-Tac-Boom', corto: 'Tic-Tac-Boom', emoji: '💣', color: '#FF6A13', tinta: '#12163A', desc: 'Pasa una persona de cada equipo. Se pasan la pelota por turnos diciendo una palabra con la sílaba. Pierde quien tenga la pelota cuando explote la bomba.', bomba: true },
+  { nombre: 'Tic-Tac-Boom', corto: 'Tic-Tac-Boom', emoji: '💣', color: '#FF6A13', tinta: '#12163A', desc: 'Pasan 4 personas al frente, 2 de cada equipo. La ruleta dice TIC (la palabra empieza con la sílaba), TAC (la tiene en cualquier parte) o BOOM (termina con ella). Al iniciar aparece la sílaba: pásense la pelota por turnos diciendo una palabra. Pierde quien tenga la pelota cuando explote la bomba.', bomba: true },
   { nombre: 'Minuto para Ganar', corto: 'Minuto', emoji: '⏱️', color: '#FFB81C', tinta: '#12163A', desc: 'Completen el reto en 60 segundos.', segundos: 60 },
   { nombre: 'Password', corto: 'Password', emoji: '🔑', color: '#00A3AD', tinta: '#04232A', desc: 'Adivinen la palabra con las pistas de sus compañeros.' },
   { nombre: 'Atínale al Precio', corto: 'Atínale', emoji: '🏷️', color: '#22A35A', tinta: '#072A16', desc: 'Los dos equipos adivinan el precio. Si queda más cerca el equipo que va por el doble, gana; si queda más cerca el que va ganando, se lo impide.' },

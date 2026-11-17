@@ -213,6 +213,7 @@ button.casilla:hover{background:var(--tile-hover)}
 .ttb-fila{display:flex;align-items:baseline;justify-content:center;flex-wrap:wrap;gap:1vmin 5vmin}
 .ttb-modo{margin:0;font-family:var(--display);color:var(--modo);font-size:clamp(2.6rem,13vmin,10rem);line-height:1;text-shadow:0 .06em 0 var(--stage)}
 .ttb-silaba{margin:0;font-family:var(--display);color:var(--papel);font-size:clamp(3rem,19vmin,14rem);line-height:1;letter-spacing:.05em}
+.ttb-silaba.oculta{min-width:1.6em;padding:0 .15em;border:.5vmin dashed var(--papel-suave);border-radius:1.4vmin;color:var(--papel-suave);text-align:center}
 .ttb-regla{margin:0;max-width:32ch;font-weight:700;font-size:clamp(1.1rem,4.2vmin,3.1rem);line-height:1.25;text-wrap:balance}
 .ttb-regla b{color:var(--oro)}
 .ttb-bomba{margin:0;font-size:clamp(3rem,12vmin,9rem);line-height:1}
