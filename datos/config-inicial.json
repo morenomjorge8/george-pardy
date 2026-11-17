@@ -46,20 +46,20 @@
       "nombre": "Datos",
       "preguntas": [
         {
-          "pregunta": "¿A qué casa de Hogwarts pertenece Rubeus Hagrid?",
-          "respuesta": "Gryffindor"
+          "pregunta": "Según el INEGI, ¿cuántos habitantes tenía México en 2025?\nA) 130,911,314\nB) 134,014,024",
+          "respuesta": "A) 130,911,314 habitantes"
         },
         {
-          "pregunta": "El Horrocrux escondido en la copa de Helga Hufflepuff fue destruido utilizando la espada de Gryffindor.\nA) Verdadero\nB) Falso",
-          "respuesta": "B) Falso"
+          "pregunta": "¿Cuáles son las tres entidades federativas más pobladas de México?",
+          "respuesta": "Estado de México, Ciudad de México y Jalisco, en ese orden (Censo 2020 del INEGI)"
         },
         {
-          "pregunta": "Sabiendo que en los 7 libros de Harry Potter se menciona a Harry 18,956 veces, a Ron 6,464 y a Hermione 5,486, ¿cuántas veces se menciona a Draco Malfoy?\nA) Entre 500 y 1000\nB) Entre 1000 y 1500\nC) Entre 1500 y 2000\nD) Más de 2000",
-          "respuesta": "B) Entre 1000 y 1500 (1,198 veces)"
+          "pregunta": "¿Qué territorio tiene mayor superficie?\nA) Arizona\nB) Sonora",
+          "respuesta": "A) Arizona: 295,253 km² contra 179,355 km² de Sonora"
         },
         {
-          "pregunta": "¿Quién fue el director de Hogwarts inmediatamente antes de Albus Dumbledore?",
-          "respuesta": "Armando Dippet"
+          "pregunta": "¿Cuál es el estado de México que comparte frontera con más estados?",
+          "respuesta": "San Luis Potosí, con 9 vecinos: Coahuila, Nuevo León, Tamaulipas, Veracruz, Hidalgo, Querétaro, Guanajuato, Jalisco y Zacatecas"
         }
       ]
     },
