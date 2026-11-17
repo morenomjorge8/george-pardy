@@ -26,8 +26,8 @@ export const MINIJUEGOS = [
   { nombre: 'Tic-Tac-Boom', corto: 'Tic-Tac-Boom', emoji: '💣', color: '#FF6A13', tinta: '#12163A', desc: 'Pasan 4 personas al frente, 2 de cada equipo. La ruleta dice TIC (la palabra empieza con la sílaba), TAC (la tiene en cualquier parte) o BOOM (termina con ella). Al iniciar aparece la sílaba: pásense la pelota por turnos diciendo una palabra. Pierde quien tenga la pelota cuando explote la bomba.', bomba: true },
   { nombre: 'Minuto para Ganar', corto: 'Minuto', emoji: '⏱️', color: '#FFB81C', tinta: '#12163A', desc: 'Completen el reto en 60 segundos.', segundos: 60 },
   { nombre: 'Password', corto: 'Password', emoji: '🔑', color: '#00A3AD', tinta: '#04232A', desc: 'Pasa una pareja por equipo: uno da pistas y el otro adivina todas las palabras que pueda en 45 segundos. Empieza el equipo que va por el doble; si iguala o supera al rival, gana el reto.', password: true },
-  { nombre: 'Atínale al Precio', corto: 'Atínale', emoji: '🏷️', color: '#22A35A', tinta: '#072A16', desc: 'Los dos equipos adivinan el precio. Si queda más cerca el equipo que va por el doble, gana; si queda más cerca el que va ganando, se lo impide.' },
-  { nombre: 'Completa la Canción', corto: 'Canción', emoji: '🎤', color: '#7B3FD6', tinta: '#FFFFFF', desc: 'Elijan a un participante y uno de los 2 artistas. Si sigue la letra 10 segundos cuando desaparezca, ganan.' }
+  { nombre: 'Atínale al Precio', corto: 'Atínale', emoji: '🏷️', color: '#22A35A', tinta: '#072A16', desc: 'Los dos equipos adivinan el precio. Si queda más cerca el equipo que va por el doble, gana; si queda más cerca el que va ganando, se lo impide.', precio: true },
+  { nombre: 'Completa la Canción', corto: 'Canción', emoji: '🎤', color: '#7B3FD6', tinta: '#FFFFFF', desc: 'Elijan a un participante y uno de los 2 artistas. Si sigue la letra 10 segundos cuando desaparezca, ganan.', cancion: true }
 ];
 /* 18 casillas: cada minijuego 3 veces (reto 1, 2 y 3), intercaladas para que no queden juntas */
 export const CASILLAS = [];
@@ -86,7 +86,7 @@ export function configBase() {
       nombre,
       preguntas: VALORES.map(() => ({ pregunta: '', respuesta: '' }))
     })),
-    minijuegos: MINIJUEGOS.map(() => ({ retos: [0, 1, 2].map(() => ({ nombre: '', instrucciones: '', material: '', video: '', respuestas: respuestasVacias(), palabras: '' })) })),
+    minijuegos: MINIJUEGOS.map(() => ({ retos: [0, 1, 2].map(() => ({ nombre: '', instrucciones: '', material: '', video: '', respuestas: respuestasVacias(), palabras: '', precio: '', enlace: '', opciones: opcionesVacias() })) })),
     videoTemporizador: '',
     videoTemporizadorInicio: 0,
     usarTimerYoutube: false,
@@ -118,6 +118,16 @@ function normalizarRespuestas(v) {
     if (typeof r === 'string') return { texto: r, puntos: 0 };
     return { texto: texto(r && r.texto), puntos: r && Number.isFinite(r.puntos) ? Math.max(0, Math.min(100, Math.round(r.puntos))) : 0 };
   });
+}
+/* Completa la Canción: 2 artistas por reto, cada uno con su video */
+export const opcionesVacias = () => [0, 1].map(() => ({ artista: '', video: '' }));
+function normalizarOpciones(v) {
+  const a = comoArreglo(v) || [];
+  return [0, 1].map(k => ({ artista: texto(a[k] && a[k].artista), video: texto(a[k] && a[k].video) }));
+}
+export function normalizarCancion(c) {
+  if (!c || typeof c !== 'object' || (c.eleccion !== 0 && c.eleccion !== 1)) return null;
+  return { eleccion: c.eleccion };
 }
 /* Password: dos turnos de 45 s; marcas[ronda] = true (adivinó) / false (no) por palabra */
 export const PASSWORD_MS = 45000;
@@ -193,7 +203,10 @@ export function normalizarConfig(raw) {
         return {
           nombre: texto(rr && rr.nombre), instrucciones: texto(rr && rr.instrucciones), material: texto(rr && rr.material), video: texto(rr && rr.video),
           respuestas: normalizarRespuestas(rr && rr.respuestas),
-          palabras: texto(rr && rr.palabras)
+          palabras: texto(rr && rr.palabras),
+          precio: texto(rr && rr.precio),
+          enlace: texto(rr && rr.enlace),
+          opciones: normalizarOpciones(rr && rr.opciones)
         };
       }) };
     });
@@ -229,11 +242,12 @@ export function normalizarEstado(raw) {
       reloj: normalizarReloj(d.reloj),
       bomba: normalizarBomba(d.bomba),
       encuesta: normalizarEncuesta(d.encuesta),
-      password: normalizarPassword(d.password)
+      password: normalizarPassword(d.password),
+      cancion: normalizarCancion(d.cancion)
     };
   }
   const L = raw.minijuegoLibre;
-  if (L && CASILLAS.includes(L.casilla)) e.minijuegoLibre = { casilla: L.casilla, reloj: normalizarReloj(L.reloj), bomba: normalizarBomba(L.bomba), encuesta: normalizarEncuesta(L.encuesta), password: normalizarPassword(L.password) };
+  if (L && CASILLAS.includes(L.casilla)) e.minijuegoLibre = { casilla: L.casilla, reloj: normalizarReloj(L.reloj), bomba: normalizarBomba(L.bomba), encuesta: normalizarEncuesta(L.encuesta), password: normalizarPassword(L.password), cancion: normalizarCancion(L.cancion) };
   if (raw.eligiendoNombres && typeof raw.eligiendoNombres === 'object') e.eligiendoNombres = { turno: raw.eligiendoNombres.turno === 1 ? 1 : 0 };
   const v = raw.video;
   if (v && enlaceValido(v.url)) {
@@ -395,7 +409,7 @@ export function girar() {
   cambiarEstado({
     ...e,
     ruletaUsadas: [...e.ruletaUsadas, id],
-    dobleONada: { ...d, fase: 'jugando', casilla: id, desfase: Math.random() * 0.7 - 0.35, giroEn: ahora(), reloj: null, bomba: null, encuesta: null, password: null }
+    dobleONada: { ...d, fase: 'jugando', casilla: id, desfase: Math.random() * 0.7 - 0.35, giroEn: ahora(), reloj: null, bomba: null, encuesta: null, password: null, cancion: null }
   });
 }
 export function resultadoDoble(gano) {
@@ -541,6 +555,19 @@ export function encuestaQuitarStrike() {
 }
 export function encuestaReiniciar() { cambiarEncuesta(() => encuestaBase()); }
 
+/* ---------- Completa la Canción: eligen uno de los 2 artistas ---------- */
+export const tieneCancion = d => !!(d && d.casilla && infoCasilla(d.casilla).juego.cancion);
+export const tienePrecio = d => !!(d && d.casilla && infoCasilla(d.casilla).juego.precio);
+export function cancionElegir(k) {
+  const d = juegoConReloj();
+  if (!tieneCancion(d) || (k !== 0 && k !== 1) || !retoDe(d.casilla).opciones[k].artista.trim()) return;
+  cambiarJuegoActivo({ ...d, cancion: { eleccion: k } });
+}
+export function cancionQuitar() {
+  const d = juegoConReloj();
+  if (tieneCancion(d) && d.cancion) cambiarJuegoActivo({ ...d, cancion: null });
+}
+
 /* ---------- Password ---------- */
 export const tienePassword = d => !!(d && d.casilla && infoCasilla(d.casilla).juego.password);
 /* Las palabras del reto: una por línea o separadas por coma; se quita la numeración "1." */
@@ -621,7 +648,7 @@ export function alternarPassword() {
 export function abrirLibre(id) {
   const e = E();
   if (!CASILLAS.includes(id) || e.abierta || e.dobleONada || e.eligiendoNombres) return;
-  cambiarEstado({ ...e, minijuegoLibre: { casilla: id, reloj: null, bomba: null, encuesta: null, password: null } });
+  cambiarEstado({ ...e, minijuegoLibre: { casilla: id, reloj: null, bomba: null, encuesta: null, password: null, cancion: null } });
 }
 export function cerrarLibre() {
   if (!E().minijuegoLibre) return;

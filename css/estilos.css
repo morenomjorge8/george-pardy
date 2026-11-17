@@ -225,6 +225,15 @@ button.casilla:hover{background:var(--tile-hover)}
 .ttb-boom-texto{margin:0;font-family:var(--display);color:#FF6A13;font-size:clamp(3rem,16vmin,12rem);line-height:1;text-shadow:0 .06em 0 var(--rosa)}
 .doble:has(.ttb-explosion){animation:ttb-destello 1s ease-out}
 @keyframes ttb-destello{0%{background:#FFF4D6}25%{background:#FF6A13}100%{background:var(--stage-deep)}}
+/* Completa la Canción en el proyector */
+.can-opciones{display:flex;flex-wrap:wrap;gap:2vmin;margin-top:1vmin}
+.can-op{display:flex;align-items:center;gap:1.2vmin;padding:1.6vmin 3vmin;border-radius:1.6vmin;border:.5vmin solid #7B3FD6;background:var(--stage);color:var(--papel);font-family:var(--display);font-size:clamp(1.1rem,4.4vmin,3.2rem);line-height:1.05;cursor:pointer;transition:opacity .3s,transform .3s}
+.can-op.elegida{background:#7B3FD6;border-color:var(--oro);transform:scale(1.06)}
+.can-op.descartada{opacity:.3}
+.libre-cuerpo .can-opciones{justify-content:center}
+.can-edit-fila{display:grid;grid-template-columns:1fr 1.4fr;gap:.35rem}
+.ctl-bomba .can-chip{font-family:var(--texto);font-weight:700}
+
 /* Password en el proyector */
 .pw-marcador{display:flex;gap:2vmin;justify-content:center;flex-wrap:wrap}
 .pw-equipo{display:grid;grid-template-columns:auto auto;align-items:center;gap:.2vmin 2vmin;padding:1vmin 2.4vmin;border-radius:1.4vmin;border:.4vmin solid var(--equipo);background:var(--stage);opacity:.65}

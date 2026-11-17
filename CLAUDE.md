@@ -102,6 +102,14 @@ Cada reto tiene `nombre`, `instrucciones` (se ven en el proyector), `material` (
 
 Retos ya definidos (Minuto para Ganar): 1 A Bit Dicey, 2 Face the Cookie, 3 Ligas vs Cartas. Están en `datos/config-inicial.json`.
 
+### Completa la Canción
+- Cada reto tiene `opciones`: 2 artistas, cada uno con su video de YouTube. El proyector muestra los 2 artistas; el equipo elige y el moderador lo marca en el iPad (o con el mouse en el proyector). Aparece “▶ Abrir la canción” (tecla V) con el video del artista elegido; el moderador le pone pausa. Estado: `cancion: null | { eleccion: 0|1 }`.
+- Retos: Belinda / Benson Boone · Bad Bunny / Luis Miguel · Ricardo Arjona / Los Ángeles Azules.
+
+### Atínale al Precio
+- Cada reto tiene `precio` (solo en el iPad) y `enlace` de Mercado Libre. El proyector muestra el producto y un botón “🛒 Ver en Mercado Libre” (tecla M) para corroborar.
+- Retos: Chevrolet Aveo 2024 (búsqueda de seminuevos, ≈ $240,000), Aspiradora Dyson V15 Detect (≈ $18,999), LEGO Architecture Nueva York 21028 (≈ $2,199). Los precios cambian: confirmarlos el día del juego.
+
 ### Password
 - Pasa una pareja por equipo: uno da pistas y el otro adivina, **de espaldas al proyector**, donde aparece la palabra en grande. Cada turno dura **45 s**. Empieza el equipo que va por el doble (en el minijuego libre, el que tiene el turno); el retador sigue con las palabras siguientes, sin repetir.
 - El moderador marca palabra por palabra en el iPad: "Adivinó" o "No adivinó" (en el proyector: A / N). Solo cuentan las adivinadas. Hay pausa y "Deshacer la última".
@@ -265,7 +273,7 @@ Después de cada paso, abre la página localmente (por ejemplo con `npx serve` o
 ## 11. Pendientes del plan (no inventar; preguntar al usuario)
 
 - ~~Escribir las 20 preguntas definitivas.~~ Listas (Harry Potter se queda con las de prueba, a petición del usuario).
-- Escribir los retos de Atínale al Precio y Completa la Canción (Tic-Tac-Boom, 100 Mexicanos, Minuto y Password ya están definidos).
+- ~~Escribir los retos de los minijuegos.~~ Listos los 18.
 - Escribir los retos de los otros cinco minijuegos (15 en total).
 - Ligas vs Cartas: cuántas cartas y a qué distancia se dispara.
 - Opción pendiente de decidir: poder elegir el reto a mano durante un Doble o Nada en lugar de girar.

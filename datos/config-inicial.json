@@ -228,21 +228,27 @@
     {
       "retos": [
         {
-          "instrucciones": "",
-          "material": "",
-          "nombre": "",
+          "instrucciones": "¿Cuánto cuesta un Chevrolet Aveo 2024 (seminuevo) en Mercado Libre? Cada equipo da su precio; gana el que quede más cerca.",
+          "material": "Seminuevos 2024 en Mercado Libre: de unos $200,000 a $285,000. Abre el enlace y toma el precio que se vea, o elige una publicación antes del juego.",
+          "nombre": "Chevrolet Aveo 2024",
+          "precio": "≈ $240,000 (rango $200,000–$285,000)",
+          "enlace": "https://autos.mercadolibre.com.mx/chevrolet/aveo/2024/",
           "video": ""
         },
         {
-          "instrucciones": "",
-          "material": "",
-          "nombre": "",
+          "instrucciones": "¿Cuánto cuesta una aspiradora inalámbrica Dyson V15 Detect en Mercado Libre? Cada equipo da su precio; gana el que quede más cerca.",
+          "material": "Tienda oficial Dyson en Mercado Libre. Confirma el precio en el enlace el día del juego.",
+          "nombre": "Aspiradora Dyson V15 Detect",
+          "precio": "≈ $18,999",
+          "enlace": "https://www.mercadolibre.com.mx/aspiradora-inalambrica-dyson-v15-detect-amarilloniquel/p/MLM26969494",
           "video": ""
         },
         {
-          "instrucciones": "",
-          "material": "",
-          "nombre": "",
+          "instrucciones": "¿Cuánto cuesta el LEGO Architecture de Nueva York (598 piezas) en Mercado Libre? Cada equipo da su precio; gana el que quede más cerca.",
+          "material": "Set 21028. Confirma el precio en el enlace el día del juego.",
+          "nombre": "LEGO Architecture Nueva York",
+          "precio": "≈ $2,199",
+          "enlace": "https://www.mercadolibre.com.mx/set-de-construccion-lego-architecture-new-york-city-598-piezas-en-caja/p/MLM17489293",
           "video": ""
         }
       ]
@@ -252,19 +258,31 @@
         {
           "instrucciones": "",
           "material": "",
-          "nombre": "",
+          "nombre": "Belinda o Benson Boone",
+          "opciones": [
+            { "artista": "Belinda", "video": "https://www.youtube.com/watch?v=Rp2rEM931G4" },
+            { "artista": "Benson Boone", "video": "https://www.youtube.com/watch?v=yPaHm9w-EEw" }
+          ],
           "video": ""
         },
         {
           "instrucciones": "",
           "material": "",
-          "nombre": "",
+          "nombre": "Bad Bunny o Luis Miguel",
+          "opciones": [
+            { "artista": "Bad Bunny", "video": "https://www.youtube.com/watch?v=ilKOwU6Ghvk" },
+            { "artista": "Luis Miguel", "video": "https://www.youtube.com/watch?v=5yqKnzvSkIE" }
+          ],
           "video": ""
         },
         {
           "instrucciones": "",
           "material": "",
-          "nombre": "",
+          "nombre": "Ricardo Arjona o Los Ángeles Azules",
+          "opciones": [
+            { "artista": "Ricardo Arjona", "video": "https://www.youtube.com/watch?v=XbmTN4QneuY" },
+            { "artista": "Los Ángeles Azules", "video": "https://www.youtube.com/watch?v=vFffZ5uejA8" }
+          ],
           "video": ""
         }
       ]

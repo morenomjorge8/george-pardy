@@ -12,7 +12,8 @@ import {
   bombaGirar, bombaSilaba, bombaAccion, alternarBomba,
   tieneEncuesta, encuestaDe, encuestaMostrar, encuestaRevelar, encuestaStrike, encuestaOcultar, encuestaQuitarStrike, encuestaReiniciar,
   tienePassword, palabrasDe, pwRondaTerminada, pwAciertos, pwTerminado, pwGanaPrimero,
-  passwordEmpezar, passwordIniciar, passwordPausar, passwordMarcar, passwordDeshacer, passwordSiguiente, passwordReiniciar, alternarPassword
+  passwordEmpezar, passwordIniciar, passwordPausar, passwordMarcar, passwordDeshacer, passwordSiguiente, passwordReiniciar, alternarPassword,
+  tieneCancion, tienePrecio, cancionElegir, cancionQuitar
 } from './estado.js';
 import { relojPasswordHtml, tickPassword } from './password.js';
 import * as sync from './sync.js';
@@ -377,6 +378,50 @@ function avisosEncuesta(d) {
   encuestaVista = { clave, strikes: x.strikes, n, fin: x.fin };
 }
 
+/* ---------- Completa la Canción y Atínale al Precio ---------- */
+/* En el proyector: los 2 artistas para elegir (también con el mouse) */
+function extraRetoPantalla(d) {
+  if (!tieneCancion(d)) return '';
+  const reto = retoDe(d.casilla), el = d.cancion ? d.cancion.eleccion : null;
+  const ops = reto.opciones.map((o, k) => (o.artista.trim()
+    ? `<button type="button" class="can-op${el === k ? ' elegida' : ''}${el !== null && el !== k ? ' descartada' : ''}" data-accion="can-elegir" data-k="${k}"><span class="emoji" aria-hidden="true">🎤</span> ${esc(o.artista.trim())}</button>`
+    : '')).join('');
+  return `<div class="can-opciones">${ops}</div>`;
+}
+const enlaceCancion = d => (tieneCancion(d) && d.cancion ? enlaceValido(retoDe(d.casilla).opciones[d.cancion.eleccion].video) : '');
+const enlacePrecio = d => (tienePrecio(d) ? enlaceValido(retoDe(d.casilla).enlace) : '');
+const botonMercadoLibre = url => `<a class="btn-escenario" href="${esc(url)}" target="_blank" rel="noopener noreferrer" data-ml>🛒 Ver en Mercado Libre <kbd>M</kbd></a>`;
+/* La canción elegida usa el mismo botón de video (tecla V) */
+function botonesExtraPantalla(d) {
+  if (enlaceCancion(d)) return `<a class="btn-escenario" href="${esc(enlaceCancion(d))}" target="_blank" rel="noopener noreferrer" data-video>▶ Abrir la canción <kbd>V</kbd></a>`;
+  if (enlacePrecio(d)) return botonMercadoLibre(enlacePrecio(d));
+  return '';
+}
+function extraRetoControl(d) {
+  const reto = retoDe(d.casilla);
+  if (tieneCancion(d)) {
+    const el = d.cancion ? d.cancion.eleccion : null;
+    const ops = reto.opciones.map((o, k) => (o.artista.trim()
+      ? `<button type="button" class="ttb-chip can-chip" data-accion="can-elegir" data-k="${k}" aria-pressed="${el === k}">🎤 ${esc(o.artista.trim())}</button>` : '')).join('');
+    const url = enlaceCancion(d);
+    return `<div class="ctl-bomba">
+        <p class="ttb-rotulo">¿Qué artista eligieron?</p>
+        <div class="ttb-silabas">${ops}</div>
+        ${url ? `<p class="ctl-nota">En el proyector aparece “▶ Abrir la canción” (o tecla V). Tú le pones pausa.</p>
+        <p class="ctl-material"><a href="${esc(url)}" target="_blank" rel="noopener noreferrer">Abrir la canción aquí</a> · <button type="button" class="btn-texto" data-accion="can-quitar">Cambiar elección</button></p>` : ''}
+      </div>`;
+  }
+  if (tienePrecio(d)) {
+    const url = enlacePrecio(d);
+    return `<div class="ctl-respuesta">
+        <p class="rotulo">Precio (solo tú lo ves)</p>
+        <p class="valor-resp">${esc(reto.precio.trim() || 'Sin precio escrito')}</p>
+        ${url ? `<p class="ctl-material"><a href="${esc(url)}" target="_blank" rel="noopener noreferrer">Ver en Mercado Libre</a> · En el proyector: botón “Ver en Mercado Libre” o tecla M.</p>` : ''}
+      </div>`;
+  }
+  return '';
+}
+
 /* ---------- Password ---------- */
 function marcadorPassword(p) {
   const a = pwAciertos(p);
@@ -540,11 +585,11 @@ function renderLibre() {
     cuerpo = `<p class="juego-emoji emoji" aria-hidden="true">${mj.emoji}</p>
       <h2 class="juego-nombre" id="libre-titulo" style="--juego:${mj.color}">${esc(mj.nombre)}</h2>
       <p class="juego-reto">${lineaReto(L)}</p>
-      <p class="juego-desc">${esc(instruccionesPantalla(L.casilla))}</p>`;
+      <p class="juego-desc">${esc(instruccionesPantalla(L.casilla))}</p>${extraRetoPantalla(L)}`;
   }
   const cu = $('#libre-cuerpo');
   if (cuerpo !== libreHtmlPrevio) { cu.innerHTML = cuerpo; libreHtmlPrevio = cuerpo; animarRuedasBomba(); }
-  $('#libre-controles').innerHTML = (conReloj && enlaceTimer() ? botonTimer() : '') + (enlaceVideo(reto) ? botonVideo(enlaceVideo(reto)) : '') + (conReloj ? botonesRelojPantalla(L) : '') + (conBomba ? botonesBombaPantalla(L) : '') + (conEncuesta ? botonesEncuestaPantalla(L) : '') + (tienePassword(L) ? botonesPasswordPantalla(L) : '') +
+  $('#libre-controles').innerHTML = (conReloj && enlaceTimer() ? botonTimer() : '') + (enlaceVideo(reto) ? botonVideo(enlaceVideo(reto)) : '') + (conReloj ? botonesRelojPantalla(L) : '') + (conBomba ? botonesBombaPantalla(L) : '') + (conEncuesta ? botonesEncuestaPantalla(L) : '') + (tienePassword(L) ? botonesPasswordPantalla(L) : '') + botonesExtraPantalla(L) +
     '<button type="button" class="btn-escenario" data-accion="libre-cerrar">Cerrar <kbd>Esc</kbd></button>';
   ov.hidden = false;
 }
@@ -590,7 +635,7 @@ function renderDobleONada() {
       lado = `<p class="juego-emoji emoji" aria-hidden="true">${mj.emoji}</p>
         <h2 class="juego-nombre" id="don-titulo" style="--juego:${mj.color}">${esc(mj.nombre)}</h2>
         <p class="juego-reto">${lineaReto(d)}</p>
-        <p class="juego-desc">${esc(instruccionesPantalla(d.casilla))}</p>
+        <p class="juego-desc">${esc(instruccionesPantalla(d.casilla))}</p>${extraRetoPantalla(d)}
         ${platosHtml(v)}`;
       botones = botonesResultado;
       if (conReloj) botones = botonesRelojPantalla(d) + botones;
@@ -610,6 +655,7 @@ function renderDobleONada() {
           if (ze.dataset.html !== he) { ze.innerHTML = he; ze.dataset.html = he; }
         }
       }
+      botones = botonesExtraPantalla(d) + botones;
       if (conPassword) {
         botones = botonesPasswordPantalla(d) + botones;
         if (modoPassword) {
@@ -758,6 +804,7 @@ function renderControlLibre(L) {
   if (tieneBomba(L)) h += bombaControlHtml(L);
   if (tieneEncuesta(L)) h += encuestaControlHtml(L);
   if (tienePassword(L)) h += passwordControlHtml(L);
+  h += extraRetoControl(L);
   h += '<button type="button" class="btn btn-primario" data-accion="libre-cerrar">Cerrar minijuego</button>';
   $('#ctl-libre').innerHTML = h;
 }
@@ -797,6 +844,7 @@ function renderControlDoble(d) {
       if (tieneBomba(d)) h += bombaControlHtml(d);
       if (tieneEncuesta(d)) h += encuestaControlHtml(d);
       if (tienePassword(d)) h += passwordControlHtml(d);
+      h += extraRetoControl(d);
     } else {
       h += `<p class="ctl-texto">${htmlEquipo(d.equipo)} se juega ${NUM.format(v)} puntos.</p>
       <p class="ctl-nota">Ya no quedan casillas en la ruleta: elijan un minijuego y marca el resultado.</p>`;
@@ -912,6 +960,14 @@ function renderEditor() {
           <textarea rows="2" maxlength="400" data-campo="reto-instrucciones" data-j="${j}" data-n="${x}" placeholder="Instrucciones: qué hay que hacer para ganar" aria-label="Instrucciones del ${et}">${esc(r.instrucciones)}</textarea>
           <input type="text" maxlength="160" data-campo="reto-material" data-j="${j}" data-n="${x}" placeholder="Material" aria-label="Material del ${et}" value="${esc(r.material)}">
           <input type="url" maxlength="300" data-campo="reto-video" data-j="${j}" data-n="${x}" placeholder="${m.encuesta ? 'Video con la pregunta (YouTube, con el minuto: …&t=182s)' : 'Enlace del video de explicación (YouTube)'}" aria-label="Video del ${et}" value="${esc(r.video)}">
+          ${m.cancion ? `<div class="enc-edit">${[0, 1].map(k => `<div class="can-edit-fila">
+              <input type="text" maxlength="60" data-campo="reto-artista" data-j="${j}" data-n="${x}" data-k="${k}" placeholder="Artista ${k + 1}" aria-label="Artista ${k + 1} del ${et}" value="${esc(r.opciones[k].artista)}">
+              <input type="url" maxlength="300" data-campo="reto-artista-video" data-j="${j}" data-n="${x}" data-k="${k}" placeholder="Canción en YouTube" aria-label="Canción del artista ${k + 1} del ${et}" value="${esc(r.opciones[k].video)}">
+            </div>`).join('')}</div>` : ''}
+          ${m.precio ? `<div class="enc-edit">
+              <input type="text" maxlength="80" data-campo="reto-precio" data-j="${j}" data-n="${x}" placeholder="Precio (solo en el control)" aria-label="Precio del ${et}" value="${esc(r.precio)}">
+              <input type="url" maxlength="400" data-campo="reto-enlace" data-j="${j}" data-n="${x}" placeholder="Enlace de Mercado Libre" aria-label="Enlace de Mercado Libre del ${et}" value="${esc(r.enlace)}">
+            </div>` : ''}
           ${m.password ? `<textarea rows="5" data-campo="reto-palabras" data-j="${j}" data-n="${x}" placeholder="Palabras, una por línea" aria-label="Palabras del ${et}">${esc(r.palabras)}</textarea>` : ''}
           ${m.encuesta ? `<p class="enc-edit-nota">Tablero en orden, de la más popular a la menos. Las 3 primeras son las que hay que encontrar.</p>
           <div class="enc-edit">${[...Array(MAX_RESPUESTAS).keys()].map(k => `<div class="enc-edit-fila${k < 3 ? ' objetivo' : ''}">
@@ -966,6 +1022,10 @@ document.addEventListener('input', e => {
     case 'reto-video': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].video = v; break;
     case 'video-temporizador': nc.videoTemporizador = v; break;
     case 'silabas-respaldo': nc.silabasRespaldo = v; break;
+    case 'reto-artista': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].opciones[+el.dataset.k].artista = v; break;
+    case 'reto-artista-video': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].opciones[+el.dataset.k].video = v; break;
+    case 'reto-precio': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].precio = v; break;
+    case 'reto-enlace': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].enlace = v; break;
     case 'reto-palabras': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].palabras = v; break;
     case 'reto-respuesta': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].respuestas[+el.dataset.k].texto = v; break;
     case 'reto-puntos': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].respuestas[+el.dataset.k].puntos = Number(v) || 0; break;
@@ -1007,6 +1067,8 @@ document.addEventListener('click', e => {
     case 'reloj-detener': relojAccion('detener'); break;
     case 'reloj-reiniciar': relojAccion('reiniciar'); break;
     case 'probar-sonido': prepararAudio(); setTimeout(() => sonido('inicio'), 60); break;
+    case 'can-elegir': cancionElegir(+b.dataset.k); break;
+    case 'can-quitar': cancionQuitar(); break;
     case 'pw-empezar': passwordEmpezar(); break;
     case 'pw-iniciar': passwordIniciar(); break;
     case 'pw-pausar': passwordPausar(); break;
@@ -1047,6 +1109,10 @@ document.addEventListener('keydown', e => {
   if ((k === ' ' || k === 'Enter') && enControl) return;
   if (k === 'v' || k === 'V') {
     const enlace = document.querySelector('#v-pantalla .doble:not([hidden]) [data-video]');
+    if (enlace) { e.preventDefault(); window.open(enlace.href, '_blank', 'noopener'); return; }
+  }
+  if (k === 'm' || k === 'M') {
+    const enlace = document.querySelector('#v-pantalla .doble:not([hidden]) [data-ml]');
     if (enlace) { e.preventDefault(); window.open(enlace.href, '_blank', 'noopener'); return; }
   }
   if (k === 't' || k === 'T') {
