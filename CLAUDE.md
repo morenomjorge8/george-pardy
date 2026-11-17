@@ -105,6 +105,7 @@ Retos ya definidos (Minuto para Ganar): 1 A Bit Dicey, 2 Face the Cookie, 3 Liga
 ### 100 Mexicanos Dijeron
 - Cada reto es una pregunta del programa: `video` es el enlace de YouTube con el minuto donde empieza la pregunta (`&t=…s`), `instrucciones` lleva la pregunta y `respuestas` el **tablero completo** en orden (hasta 8 `{ texto, puntos }`).
 - **Gana** el equipo que destapa las **3 primeras** (las más populares) **antes de juntar 3 strikes**. Una respuesta que está en el tablero pero no es de las 3 se destapa sin strike y sin ganar. **Strike solo si la respuesta no está en el tablero.** Con 3 strikes pierde.
+- Antes del tablero, el proyector muestra **solo las reglas** ("Reto N de 3"): ni la pregunta ni su título, porque la pregunta se ve en el video. El iPad sí ve la pregunta.
 - El proyector muestra el tablero como en el programa: dos columnas (1–4 y 5–8), lugares tapados con su número, las 3 del objetivo en **dorado** y las demás en azul; al destapar se ve la respuesta con sus puntos. Abajo las 3 casillas de strike.
 - El iPad ve el tablero completo desde antes (★ en las 3 del objetivo), "Mostrar tablero", "Destapar" en cada una, "Strike" (X grande y zumbido en el proyector), "Ocultar", "Quitar un strike" y "Reiniciar tablero". En el proyector: Espacio muestra el tablero, teclas 1–8 destapan, X marca strike.
 - Estado: `encuesta: null | { reveladas: [bool×8], strikes: 0–3, fin: null|'gano'|'perdio' }` dentro de `dobleONada` o `minijuegoLibre`.

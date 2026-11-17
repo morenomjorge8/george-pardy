@@ -373,11 +373,17 @@ function avisosEncuesta(d) {
   encuestaVista = { clave, strikes: x.strikes, n, fin: x.fin };
 }
 
-/* Línea del reto: en Tic-Tac-Boom muestra la sílaba */
+/* Lo que dice el proyector del reto. En 100 Mexicanos solo las reglas: la pregunta sale en el video. */
+function instruccionesPantalla(id) {
+  const { juego: mj } = infoCasilla(id);
+  return mj.encuesta ? mj.desc : (retoDe(id).instrucciones.trim() || mj.desc);
+}
+/* Línea del reto en el proyector */
 function lineaReto(d) {
   const { juego: mj, n } = infoCasilla(d.casilla);
   const nombre = retoDe(d.casilla).nombre.trim();
-  if (mj.bomba) return `Reto ${n} de 3`; /* la sílaba no se revela antes de iniciar */
+  /* Tic-Tac-Boom no revela la sílaba ni 100 Mexicanos la pregunta antes de tiempo */
+  if (mj.bomba || mj.encuesta) return `Reto ${n} de 3`;
   return nombre ? `Reto ${n}: ${esc(nombre)}` : `Reto ${n} de 3`;
 }
 
@@ -436,7 +442,7 @@ function renderLibre() {
     cuerpo = `<p class="juego-emoji emoji" aria-hidden="true">${mj.emoji}</p>
       <h2 class="juego-nombre" id="libre-titulo" style="--juego:${mj.color}">${esc(mj.nombre)}</h2>
       <p class="juego-reto">${lineaReto(L)}</p>
-      <p class="juego-desc">${esc(reto.instrucciones.trim() || mj.desc)}</p>`;
+      <p class="juego-desc">${esc(instruccionesPantalla(L.casilla))}</p>`;
   }
   const cu = $('#libre-cuerpo');
   if (cuerpo !== libreHtmlPrevio) { cu.innerHTML = cuerpo; libreHtmlPrevio = cuerpo; animarRuedasBomba(); }
@@ -484,7 +490,7 @@ function renderDobleONada() {
       lado = `<p class="juego-emoji emoji" aria-hidden="true">${mj.emoji}</p>
         <h2 class="juego-nombre" id="don-titulo" style="--juego:${mj.color}">${esc(mj.nombre)}</h2>
         <p class="juego-reto">${lineaReto(d)}</p>
-        <p class="juego-desc">${esc(reto.instrucciones.trim() || mj.desc)}</p>
+        <p class="juego-desc">${esc(instruccionesPantalla(d.casilla))}</p>
         ${platosHtml(v)}`;
       botones = botonesResultado;
       if (conReloj) botones = botonesRelojPantalla(d) + botones;
