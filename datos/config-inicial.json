@@ -67,20 +67,20 @@
       "nombre": "Música",
       "preguntas": [
         {
-          "pregunta": "¿A qué casa de Hogwarts pertenece Rubeus Hagrid?",
-          "respuesta": "Gryffindor"
+          "pregunta": "¿Cuál es el artista mexicano que más veces ha llenado el Auditorio Nacional?",
+          "respuesta": "Luis Miguel (más de 226 funciones agotadas)"
         },
         {
-          "pregunta": "El Horrocrux escondido en la copa de Helga Hufflepuff fue destruido utilizando la espada de Gryffindor.\nA) Verdadero\nB) Falso",
-          "respuesta": "B) Falso"
+          "pregunta": "¿Qué artista interpreta la canción con la siguiente letra?\n“Why'd you have to go and make things so complicated? / I see the way you're acting like you're somebody else / Gets me frustrated”",
+          "respuesta": "Avril Lavigne (“Complicated”, 2002)"
         },
         {
-          "pregunta": "Sabiendo que en los 7 libros de Harry Potter se menciona a Harry 18,956 veces, a Ron 6,464 y a Hermione 5,486, ¿cuántas veces se menciona a Draco Malfoy?\nA) Entre 500 y 1000\nB) Entre 1000 y 1500\nC) Entre 1500 y 2000\nD) Más de 2000",
-          "respuesta": "B) Entre 1000 y 1500 (1,198 veces)"
+          "pregunta": "Menciona el nombre exacto de tres canciones de Christian Nodal.",
+          "respuesta": "Cualquiera de: Adiós Amor · Ya No Somos Ni Seremos · De Los Besos Que Te Di · Probablemente · No Te Contaron Mal · Dime Cómo Quieres · Botella Tras Botella · Aquí Abajo · Se Me Olvidó · Nace Un Borracho · Amor Tóxico · Te Voy a Olvidar · Pa' Olvidarme de Ella · La Sinvergüenza · Por el Resto de Tu Vida · Cazzualidades · Quédate · Me Dejé Llevar · AYAYAY! · Te Fallé"
         },
         {
-          "pregunta": "¿Quién fue el director de Hogwarts inmediatamente antes de Albus Dumbledore?",
-          "respuesta": "Armando Dippet"
+          "pregunta": "¿Cuál de estos proyectos musicales tiene más reproducciones en su sesión de Tiny Desk Concert en YouTube?\nA) Carín León\nB) Rawayana\nC) 31 Minutos",
+          "respuesta": "C) 31 Minutos (más de 20 millones de vistas)"
         }
       ]
     },

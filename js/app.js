@@ -592,6 +592,7 @@ function renderPreguntaGrande() {
     const yaEstaba = !r.hidden && !nueva;
     r.hidden = false;
     r.textContent = p.respuesta.trim() || 'Sin respuesta escrita.';
+    r.classList.toggle('larga', p.respuesta.trim().length > 90);
     if (!yaEstaba) { r.classList.remove('visible'); void r.offsetWidth; r.classList.add('visible'); }
   } else {
     r.hidden = true;
@@ -781,7 +782,7 @@ function renderEditor() {
       h += `<div class="fila-pregunta">
         <span class="valor" aria-hidden="true">${VALORES[i]}</span>
         <textarea rows="2" maxlength="400" data-campo="pregunta" data-c="${c}" data-i="${i}" placeholder="Pregunta de ${VALORES[i]}" aria-label="Pregunta de ${VALORES[i]} en la categoría ${c + 1}">${esc(p.pregunta)}</textarea>
-        <input type="text" maxlength="160" data-campo="respuesta" data-c="${c}" data-i="${i}" placeholder="Respuesta" aria-label="Respuesta de ${VALORES[i]} en la categoría ${c + 1}" value="${esc(p.respuesta)}">
+        <input type="text" maxlength="600" data-campo="respuesta" data-c="${c}" data-i="${i}" placeholder="Respuesta" aria-label="Respuesta de ${VALORES[i]} en la categoría ${c + 1}" value="${esc(p.respuesta)}">
       </div>`;
     });
     h += '</section>';
