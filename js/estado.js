@@ -22,7 +22,7 @@ export const OPCIONES_EQUIPO = [
 ];
 export const IDS_EQUIPO = OPCIONES_EQUIPO.map(o => o.id);
 export const MINIJUEGOS = [
-  { nombre: '100 Mexicanos Dijeron', corto: '100 Mexicanos', emoji: '💯', color: '#E4007C', tinta: '#FFFFFF', desc: 'Vean la pregunta en el video y adivinen las 3 respuestas más populares antes de juntar 3 strikes.', encuesta: true },
+  { nombre: '100 Mexicanos Dijeron', corto: '100 Mexicanos', emoji: '💯', color: '#E4007C', tinta: '#FFFFFF', desc: 'Vean la pregunta en el video. Ganan si encuentran las 3 respuestas más populares antes de juntar 3 strikes; una respuesta que no está en el tablero es strike.', encuesta: true },
   { nombre: 'Tic-Tac-Boom', corto: 'Tic-Tac-Boom', emoji: '💣', color: '#FF6A13', tinta: '#12163A', desc: 'Pasa una persona de cada equipo. Se pasan la pelota por turnos diciendo una palabra con la sílaba. Pierde quien tenga la pelota cuando explote la bomba.', bomba: true },
   { nombre: 'Minuto para Ganar', corto: 'Minuto', emoji: '⏱️', color: '#FFB81C', tinta: '#12163A', desc: 'Completen el reto en 60 segundos.', segundos: 60 },
   { nombre: 'Password', corto: 'Password', emoji: '🔑', color: '#00A3AD', tinta: '#04232A', desc: 'Adivinen la palabra con las pistas de sus compañeros.' },
@@ -86,7 +86,7 @@ export function configBase() {
       nombre,
       preguntas: VALORES.map(() => ({ pregunta: '', respuesta: '' }))
     })),
-    minijuegos: MINIJUEGOS.map(() => ({ retos: [0, 1, 2].map(() => ({ nombre: '', instrucciones: '', material: '', video: '', respuestas: ['', '', ''] })) })),
+    minijuegos: MINIJUEGOS.map(() => ({ retos: [0, 1, 2].map(() => ({ nombre: '', instrucciones: '', material: '', video: '', respuestas: respuestasVacias() })) })),
     videoTemporizador: '',
     videoTemporizadorInicio: 0,
     usarTimerYoutube: false,
@@ -107,12 +107,24 @@ export function normalizarReloj(r) {
     restanteMs: Number.isFinite(r.restanteMs) ? Math.max(0, Math.min(600000, r.restanteMs)) : 60000
   };
 }
-/* 100 Mexicanos: qué respuestas ya salieron, cuántos strikes y cómo terminó */
+/* 100 Mexicanos: tablero de hasta 8 respuestas con sus puntos; las 3 primeras son el objetivo */
+export const MAX_RESPUESTAS = 8, OBJETIVO = 3;
+const LUGARES = [...Array(MAX_RESPUESTAS).keys()];
+export const respuestasVacias = () => LUGARES.map(() => ({ texto: '', puntos: 0 }));
+function normalizarRespuestas(v) {
+  const a = comoArreglo(v) || [];
+  return LUGARES.map(k => {
+    const r = a[k];
+    if (typeof r === 'string') return { texto: r, puntos: 0 };
+    return { texto: texto(r && r.texto), puntos: r && Number.isFinite(r.puntos) ? Math.max(0, Math.min(100, Math.round(r.puntos))) : 0 };
+  });
+}
+/* Qué respuestas ya salieron, cuántos strikes y cómo terminó */
 export function normalizarEncuesta(x) {
   if (!x || typeof x !== 'object') return null;
   const rev = comoArreglo(x.reveladas) || [];
   return {
-    reveladas: [0, 1, 2].map(k => rev[k] === true),
+    reveladas: LUGARES.map(k => rev[k] === true),
     strikes: Number.isInteger(x.strikes) ? Math.max(0, Math.min(3, x.strikes)) : 0,
     fin: x.fin === 'gano' || x.fin === 'perdio' ? x.fin : null
   };
@@ -161,10 +173,9 @@ export function normalizarConfig(raw) {
       const retos = (minijuegos[j] && comoArreglo(minijuegos[j].retos)) || [];
       return { retos: m.retos.map((r, x) => {
         const rr = retos[x];
-        const resp = (rr && comoArreglo(rr.respuestas)) || [];
         return {
           nombre: texto(rr && rr.nombre), instrucciones: texto(rr && rr.instrucciones), material: texto(rr && rr.material), video: texto(rr && rr.video),
-          respuestas: [0, 1, 2].map(k => texto(resp[k]))
+          respuestas: normalizarRespuestas(rr && rr.respuestas)
         };
       }) };
     });
@@ -452,8 +463,13 @@ export function alternarBomba() {
 
 /* ---------- 100 Mexicanos: las 3 más populares antes de 3 strikes ---------- */
 export const tieneEncuesta = d => !!(d && d.casilla && infoCasilla(d.casilla).juego.encuesta);
-const ENCUESTA_BASE = { reveladas: [false, false, false], strikes: 0, fin: null };
+const encuestaBase = () => ({ reveladas: LUGARES.map(() => false), strikes: 0, fin: null });
+const ENCUESTA_BASE = encuestaBase();
 export const encuestaDe = d => (d && d.encuesta) || ENCUESTA_BASE;
+/* Los lugares del tablero que tienen respuesta escrita (en orden) */
+export const lugaresTablero = d => retoDe(d.casilla).respuestas.map((r, k) => (r.texto.trim() ? k : -1)).filter(k => k >= 0);
+/* El objetivo: las 3 primeras respuestas escritas */
+export const lugaresObjetivo = d => lugaresTablero(d).slice(0, OBJETIVO);
 function cambiarEncuesta(f, crear = false) {
   const d = juegoConReloj();
   if (!tieneEncuesta(d) || (!d.encuesta && !crear)) return;
@@ -463,12 +479,16 @@ function cambiarEncuesta(f, crear = false) {
 }
 /* Muestra el tablero en el proyector, todavía sin respuestas */
 export function encuestaMostrar() { cambiarEncuesta(x => x, true); }
-/* Al destapar la tercera antes de 3 strikes, ganan; después de perder solo se enseñan */
+/* Ganan al destapar las 3 primeras antes de 3 strikes; las demás del tablero no dan strike ni ganan.
+   Después de perder solo se enseñan. */
 export function encuestaRevelar(k) {
+  const d = juegoConReloj();
+  if (!tieneEncuesta(d) || !lugaresTablero(d).includes(k)) return;
+  const objetivo = lugaresObjetivo(d);
   cambiarEncuesta(x => {
-    if (![0, 1, 2].includes(k) || x.reveladas[k]) return null;
+    if (x.reveladas[k]) return null;
     x.reveladas[k] = true;
-    if (!x.fin && x.reveladas.every(Boolean)) x.fin = 'gano';
+    if (!x.fin && objetivo.length && objetivo.every(j => x.reveladas[j])) x.fin = 'gano';
     return x;
   });
 }
@@ -482,10 +502,13 @@ export function encuestaStrike() {
 }
 /* Corregir un error del moderador */
 export function encuestaOcultar(k) {
+  const d = juegoConReloj();
+  if (!tieneEncuesta(d)) return;
+  const objetivo = lugaresObjetivo(d);
   cambiarEncuesta(x => {
     if (!x.reveladas[k]) return null;
     x.reveladas[k] = false;
-    if (x.fin === 'gano') x.fin = null;
+    if (x.fin === 'gano' && !objetivo.every(j => x.reveladas[j])) x.fin = null;
     return x;
   });
 }
@@ -497,7 +520,7 @@ export function encuestaQuitarStrike() {
     return x;
   });
 }
-export function encuestaReiniciar() { cambiarEncuesta(() => ({ ...ENCUESTA_BASE, reveladas: [false, false, false] })); }
+export function encuestaReiniciar() { cambiarEncuesta(() => encuestaBase()); }
 
 /* ---------- Minijuego libre: no suma puntos ni gasta casillas ---------- */
 export function abrirLibre(id) {

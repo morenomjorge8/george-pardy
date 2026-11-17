@@ -8,7 +8,7 @@ import {
   abrir, mostrarRespuesta, resolver, cerrar, ajustar, pasarTurno, reactivar, nuevaPartida,
   decidirDoble, girar, resultadoDoble, cerrarDoble, relojAccion, alternarReloj,
   abrirLibre, cerrarLibre, abrirNombres, cerrarNombres, turnoNombres, asignarNombre, elegirEquipo,
-  SILABAS_BASE, tieneBomba, bombaDe, modoBomba, bombaGirando, bombaExploto, silabaDe, silabasDisponibles,
+  SILABAS_BASE, MAX_RESPUESTAS, lugaresTablero, lugaresObjetivo, tieneBomba, bombaDe, modoBomba, bombaGirando, bombaExploto, silabaDe, silabasDisponibles,
   bombaGirar, bombaSilaba, bombaAccion, alternarBomba,
   tieneEncuesta, encuestaDe, encuestaMostrar, encuestaRevelar, encuestaStrike, encuestaOcultar, encuestaQuitarStrike, encuestaReiniciar
 } from './estado.js';
@@ -293,15 +293,25 @@ function bombaControlHtml(d) {
     </div>`;
 }
 /* ---------- 100 Mexicanos ---------- */
+/* Tablero como el del programa: dos columnas (1–4 y 5–8); las 3 primeras en dorado */
 function encuestaPantallaHtml(d, lema) {
   const reto = retoDe(d.casilla), x = encuestaDe(d);
-  const filas = [0, 1, 2].map(k => `<li class="enc-fila${x.reveladas[k] ? ' revelada' : ''}">
-      <span class="enc-num">${k + 1}</span><span class="enc-resp">${x.reveladas[k] ? esc(reto.respuestas[k].trim() || '—') : ''}</span>
-    </li>`).join('');
+  const lugares = lugaresTablero(d), objetivo = lugaresObjetivo(d);
+  const dosColumnas = lugares.length > 4;
+  const filasPorColumna = Math.max(1, dosColumnas ? 4 : lugares.length);
+  const filas = lugares.map((k, i) => {
+    const r = reto.respuestas[k], abierta = x.reveladas[k];
+    return `<li class="enc-fila${objetivo.includes(k) ? ' objetivo' : ''}${abierta ? ' revelada' : ''}">
+      ${abierta
+        ? `<span class="enc-resp">${esc(r.texto.trim())}</span><span class="enc-pts">${r.puntos || ''}</span>`
+        : `<span class="enc-num">${i + 1}</span>`}
+    </li>`;
+  }).join('');
   const strikes = [0, 1, 2].map(k => `<span class="enc-x${k < x.strikes ? ' activa' : ''}" aria-hidden="true">✗</span>`).join('');
   const fin = x.fin ? `<p class="enc-fin ${x.fin}">${x.fin === 'gano' ? '¡Encontraron las tres!' : '¡Tres strikes!'}</p>` : '';
   return `<p class="reloj-titulo" style="--juego:#E4007C"><span class="emoji" aria-hidden="true">💯</span> ${esc(reto.nombre.trim() || '100 Mexicanos')}</p>
-    <ol class="enc-tablero">${filas}</ol>
+    <ol class="enc-tablero" style="--filas:${filasPorColumna};--cols:${dosColumnas ? 2 : 1}">${filas}</ol>
+    <p class="enc-leyenda">Encuentren las <b>3 doradas</b> antes de 3 strikes</p>
     <div class="enc-strikes" role="img" aria-label="${x.strikes} de 3 strikes">${strikes}</div>
     ${fin}
     ${lema}`;
@@ -309,37 +319,36 @@ function encuestaPantallaHtml(d, lema) {
 function botonesEncuestaPantalla(d) {
   if (!d.encuesta) return '<button type="button" class="btn-escenario" data-accion="enc-mostrar">Mostrar tablero <kbd>Espacio</kbd></button>';
   const x = encuestaDe(d);
-  let h = [0, 1, 2].filter(k => !x.reveladas[k]).map(k => `<button type="button" class="btn-escenario" data-accion="enc-revelar" data-k="${k}">Destapar ${k + 1} <kbd>${k + 1}</kbd></button>`).join('');
-  if (!x.fin) h += '<button type="button" class="btn-escenario" data-accion="enc-strike">Strike <kbd>X</kbd></button>';
-  return h;
+  return x.fin ? '' : '<button type="button" class="btn-escenario" data-accion="enc-strike">Strike <kbd>X</kbd></button><span class="enc-ayuda">Destapar: teclas 1–8</span>';
 }
 function encuestaControlHtml(d) {
   const reto = retoDe(d.casilla), x = encuestaDe(d);
-  if (!d.encuesta) {
-    return `<div class="ctl-bomba"><p class="ctl-nota">Pongan el video con la pregunta y luego muestra el tablero en el proyector.</p>
-      <div class="ctl-bomba-botones"><button type="button" class="btn btn-primario" data-accion="enc-mostrar">Mostrar tablero</button></div></div>`;
-  }
-  const filas = [0, 1, 2].map(k => {
-    const r = reto.respuestas[k].trim() || 'Sin respuesta escrita';
-    return `<li class="enc-ctl-fila${x.reveladas[k] ? ' revelada' : ''}">
-        <b>${k + 1}</b><span>${esc(r)}</span>
-        ${x.reveladas[k]
+  const objetivo = lugaresObjetivo(d);
+  const lugares = lugaresTablero(d);
+  const filas = lugares.map((k, i) => {
+    const r = reto.respuestas[k];
+    return `<li class="enc-ctl-fila${objetivo.includes(k) ? ' objetivo' : ''}${x.reveladas[k] ? ' revelada' : ''}">
+        <b>${i + 1}</b><span>${esc(r.texto.trim())}${r.puntos ? ` <small>(${r.puntos})</small>` : ''}</span>
+        ${!d.encuesta ? '' : x.reveladas[k]
           ? `<button type="button" class="btn-texto" data-accion="enc-ocultar" data-k="${k}">Ocultar</button>`
-          : `<button type="button" class="btn btn-primario" data-accion="enc-revelar" data-k="${k}">Destapar</button>`}
+          : `<button type="button" class="btn${objetivo.includes(k) ? ' btn-primario' : ''}" data-accion="enc-revelar" data-k="${k}">Destapar</button>`}
       </li>`;
   }).join('');
-  let estado = `Strikes: ${x.strikes} de 3.`;
+  let estado = `Strikes: ${x.strikes} de 3. Strike solo si la respuesta no está en el tablero.`;
   if (x.fin === 'gano') estado = '¡Encontraron las tres! Ganaron el reto.';
   else if (x.fin === 'perdio') estado = '¡Tres strikes! Perdieron el reto. Puedes destapar las que faltan.';
   return `<div class="ctl-bomba">
-      <p class="ttb-rotulo">Las 3 más populares (solo tú las ves)</p>
-      <ol class="enc-ctl">${filas}</ol>
-      <p class="ctl-nota">${estado}</p>
+      <p class="ttb-rotulo">Tablero (solo tú lo ves) · ★ las 3 que necesitan</p>
+      ${lugares.length ? `<ol class="enc-ctl">${filas}</ol>` : '<p class="ctl-nota">Este reto no tiene respuestas escritas. Agrégalas en Editar preguntas.</p>'}
+      ${!d.encuesta
+        ? `<p class="ctl-nota">Pongan el video con la pregunta, páusenlo y luego muestra el tablero en el proyector.</p>
+      <div class="ctl-bomba-botones"><button type="button" class="btn btn-primario" data-accion="enc-mostrar">Mostrar tablero</button></div>`
+        : `<p class="ctl-nota">${estado}</p>
       <div class="ctl-bomba-botones">
         ${x.fin ? '' : '<button type="button" class="btn btn-alerta" data-accion="enc-strike">✗ Strike</button>'}
         ${x.strikes ? '<button type="button" class="btn" data-accion="enc-quitar-strike">Quitar un strike</button>' : ''}
         <button type="button" class="btn" data-accion="enc-reiniciar">Reiniciar tablero</button>
-      </div>
+      </div>`}
     </div>`;
 }
 /* Sonido y X grande en el proyector cuando cambia el tablero */
@@ -783,7 +792,12 @@ function renderEditor() {
           <textarea rows="2" maxlength="400" data-campo="reto-instrucciones" data-j="${j}" data-n="${x}" placeholder="Instrucciones: qué hay que hacer para ganar" aria-label="Instrucciones del ${et}">${esc(r.instrucciones)}</textarea>
           <input type="text" maxlength="160" data-campo="reto-material" data-j="${j}" data-n="${x}" placeholder="Material" aria-label="Material del ${et}" value="${esc(r.material)}">
           <input type="url" maxlength="300" data-campo="reto-video" data-j="${j}" data-n="${x}" placeholder="${m.encuesta ? 'Video con la pregunta (YouTube, con el minuto: …&t=182s)' : 'Enlace del video de explicación (YouTube)'}" aria-label="Video del ${et}" value="${esc(r.video)}">
-          ${m.encuesta ? `<div class="enc-edit">${[0, 1, 2].map(k => `<input type="text" maxlength="60" data-campo="reto-respuesta" data-j="${j}" data-n="${x}" data-k="${k}" placeholder="Respuesta ${k + 1}" aria-label="Respuesta ${k + 1} del ${et}" value="${esc(r.respuestas[k])}">`).join('')}</div>` : ''}
+          ${m.encuesta ? `<p class="enc-edit-nota">Tablero en orden, de la más popular a la menos. Las 3 primeras son las que hay que encontrar.</p>
+          <div class="enc-edit">${[...Array(MAX_RESPUESTAS).keys()].map(k => `<div class="enc-edit-fila${k < 3 ? ' objetivo' : ''}">
+              <span>${k + 1}</span>
+              <input type="text" maxlength="40" data-campo="reto-respuesta" data-j="${j}" data-n="${x}" data-k="${k}" placeholder="Respuesta ${k + 1}" aria-label="Respuesta ${k + 1} del ${et}" value="${esc(r.respuestas[k].texto)}">
+              <input type="number" min="0" max="100" inputmode="numeric" data-campo="reto-puntos" data-j="${j}" data-n="${x}" data-k="${k}" placeholder="Pts" aria-label="Puntos de la respuesta ${k + 1} del ${et}" value="${r.respuestas[k].puntos || ''}">
+            </div>`).join('')}</div>` : ''}
         </div>
       </div>`;
     });
@@ -831,7 +845,8 @@ document.addEventListener('input', e => {
     case 'reto-video': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].video = v; break;
     case 'video-temporizador': nc.videoTemporizador = v; break;
     case 'silabas-respaldo': nc.silabasRespaldo = v; break;
-    case 'reto-respuesta': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].respuestas[+el.dataset.k] = v; break;
+    case 'reto-respuesta': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].respuestas[+el.dataset.k].texto = v; break;
+    case 'reto-puntos': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].respuestas[+el.dataset.k].puntos = Number(v) || 0; break;
     default: return;
   }
   actualizarConfig(nc);
@@ -913,7 +928,7 @@ document.addEventListener('keydown', e => {
   const activo = estado.minijuegoLibre || (estado.dobleONada && estado.dobleONada.fase === 'jugando' ? estado.dobleONada : null);
   if (tieneEncuesta(activo) && !estaGirando()) {
     if (k === ' ' && !activo.encuesta) { e.preventDefault(); encuestaMostrar(); return; }
-    if (activo.encuesta && ['1', '2', '3'].includes(k)) { encuestaRevelar(+k - 1); return; }
+    if (activo.encuesta && /^[1-8]$/.test(k)) { const lugar = lugaresTablero(activo)[+k - 1]; if (lugar !== undefined) encuestaRevelar(lugar); return; }
     if (activo.encuesta && (k === 'x' || k === 'X')) { encuestaStrike(); return; }
   }
   if (estado.minijuegoLibre) {

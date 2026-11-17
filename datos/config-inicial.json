@@ -114,25 +114,45 @@
     {
       "retos": [
         {
-          "instrucciones": "“Sin decir groserías, cuando alguien está enojado decimos que se lo está llevando…” Adivinen las 3 respuestas más populares antes de juntar 3 strikes.",
-          "material": "Tablero completo: 1 La fregada (27) · 2 El diablo / demonio (22) · 3 La tostada (18) · 4 El tren (13) · 5 La que lo trajo (9) · 6 La tiznada (7). El video muestra la pregunta desde el 3:02; páusalo antes de que contesten.",
+          "instrucciones": "“Sin decir groserías, cuando alguien está enojado decimos que se lo está llevando…”",
+          "material": "El video arranca en el 2:10. Páusalo después de la pregunta, antes de que contesten.",
           "nombre": "Se lo está llevando…",
-          "respuestas": ["La fregada", "El diablo / demonio", "La tostada"],
-          "video": "https://www.youtube.com/watch?v=DYxFbqXEfUQ&t=182s"
+          "respuestas": [
+            { "texto": "La fregada", "puntos": 27 },
+            { "texto": "El diablo / demonio", "puntos": 22 },
+            { "texto": "La tostada", "puntos": 18 },
+            { "texto": "El tren", "puntos": 13 },
+            { "texto": "La que lo trajo", "puntos": 9 },
+            { "texto": "La tiznada", "puntos": 7 }
+          ],
+          "video": "https://www.youtube.com/watch?v=DYxFbqXEfUQ&t=130s"
         },
         {
-          "instrucciones": "“Cuando tu bebé llora mucho, ¿qué haces para calmarlo?” Adivinen las 3 respuestas más populares antes de juntar 3 strikes.",
-          "material": "Tablero completo: 1 Arrullarlo / cargarlo (33) · 2 Darle de comer (23) · 3 Darle su chupón (21) · 4 Darle su juguete (11) · 5 Cambiarle el pañal (5). El video muestra la pregunta desde el 7:52; páusalo antes de que contesten.",
+          "instrucciones": "“Cuando tu bebé llora mucho, ¿qué haces para calmarlo?”",
+          "material": "El video arranca en el 7:52. Páusalo después de la pregunta, antes de que contesten.",
           "nombre": "Bebé que llora",
-          "respuestas": ["Arrullarlo / cargarlo", "Darle de comer", "Darle su chupón"],
+          "respuestas": [
+            { "texto": "Arrullarlo / cargarlo", "puntos": 33 },
+            { "texto": "Darle de comer", "puntos": 23 },
+            { "texto": "Darle su chupón", "puntos": 21 },
+            { "texto": "Darle su juguete", "puntos": 11 },
+            { "texto": "Cambiarle el pañal", "puntos": 5 }
+          ],
           "video": "https://www.youtube.com/watch?v=DYxFbqXEfUQ&t=472s"
         },
         {
-          "instrucciones": "“Algo que haces en un elevador cuando vas solo.” Adivinen las 3 respuestas más populares antes de juntar 3 strikes.",
-          "material": "Tablero completo: 1 Acomodarme la ropa (25) · 2 Tomarme una foto (21) · 3 Arreglarme el cabello (19) · 4 Echarme un gas (13) · 5 Sacarme un moco (11) · 6 Cantar (7). El video muestra la pregunta desde el 19:41; páusalo antes de que contesten.",
-          "nombre": "Solo en el elevador",
-          "respuestas": ["Acomodarme la ropa", "Tomarme una foto", "Arreglarme el cabello"],
-          "video": "https://www.youtube.com/watch?v=DYxFbqXEfUQ&t=1181s"
+          "instrucciones": "“¿Qué te haría sospechar que te están poniendo el cuerno?”",
+          "material": "El video arranca en el 3:47. Páusalo después de la pregunta, antes de que contesten.",
+          "nombre": "¿Te ponen el cuerno?",
+          "respuestas": [
+            { "texto": "Se porta indiferente", "puntos": 25 },
+            { "texto": "Mensajea mucho", "puntos": 22 },
+            { "texto": "Llega tarde", "puntos": 19 },
+            { "texto": "Huele a perfume", "puntos": 15 },
+            { "texto": "No llega a dormir", "puntos": 12 },
+            { "texto": "Llamadas de noche", "puntos": 5 }
+          ],
+          "video": "https://www.youtube.com/watch?v=b7eEKcagddY&t=227s"
         }
       ]
     },
