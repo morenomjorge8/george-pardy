@@ -257,7 +257,7 @@ Después de cada paso, abre la página localmente (por ejemplo con `npx serve` o
 
 ## 11. Pendientes del plan (no inventar; preguntar al usuario)
 
-- Escribir las 20 preguntas definitivas.
+- ~~Escribir las 20 preguntas definitivas.~~ Listas (Harry Potter se queda con las de prueba, a petición del usuario).
 - Definir la condición de victoria de Password. (Tic-Tac-Boom y 100 Mexicanos ya están definidos.)
 - Escribir los retos de los otros cinco minijuegos (15 en total).
 - Ligas vs Cartas: cuántas cartas y a qué distancia se dispara.

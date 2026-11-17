@@ -88,20 +88,20 @@
       "nombre": "Deportes",
       "preguntas": [
         {
-          "pregunta": "¿A qué casa de Hogwarts pertenece Rubeus Hagrid?",
-          "respuesta": "Gryffindor"
+          "pregunta": "¿Qué equipos de la NFL están empatados con el mayor número de Super Bowls ganados en la historia?",
+          "respuesta": "Patriotas de Nueva Inglaterra y Acereros de Pittsburgh, con 6 cada uno"
         },
         {
-          "pregunta": "El Horrocrux escondido en la copa de Helga Hufflepuff fue destruido utilizando la espada de Gryffindor.\nA) Verdadero\nB) Falso",
-          "respuesta": "B) Falso"
+          "pregunta": "¿En qué ciudad se celebraron los Juegos Olímpicos de Verano de 2012?",
+          "respuesta": "Londres"
         },
         {
-          "pregunta": "Sabiendo que en los 7 libros de Harry Potter se menciona a Harry 18,956 veces, a Ron 6,464 y a Hermione 5,486, ¿cuántas veces se menciona a Draco Malfoy?\nA) Entre 500 y 1000\nB) Entre 1000 y 1500\nC) Entre 1500 y 2000\nD) Más de 2000",
-          "respuesta": "B) Entre 1000 y 1500 (1,198 veces)"
+          "pregunta": "¿Qué país ganó la Copa Mundial de la FIFA 2006, disputada en Alemania?",
+          "respuesta": "Italia (le ganó a Francia en penales)"
         },
         {
-          "pregunta": "¿Quién fue el director de Hogwarts inmediatamente antes de Albus Dumbledore?",
-          "respuesta": "Armando Dippet"
+          "pregunta": "¿Cuál de los siguientes pilotos tiene el mayor número de victorias en la historia de la Fórmula 1?\nA) Max Verstappen\nB) Lewis Hamilton\nC) Michael Schumacher",
+          "respuesta": "B) Lewis Hamilton (105 victorias)"
         }
       ]
     }
