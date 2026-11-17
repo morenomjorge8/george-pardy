@@ -10,8 +10,11 @@ import {
   abrirLibre, cerrarLibre, abrirNombres, cerrarNombres, turnoNombres, asignarNombre, elegirEquipo,
   SILABAS_BASE, MAX_RESPUESTAS, lugaresTablero, lugaresObjetivo, tieneBomba, bombaDe, modoBomba, bombaGirando, bombaExploto, silabaDe, silabasDisponibles,
   bombaGirar, bombaSilaba, bombaAccion, alternarBomba,
-  tieneEncuesta, encuestaDe, encuestaMostrar, encuestaRevelar, encuestaStrike, encuestaOcultar, encuestaQuitarStrike, encuestaReiniciar
+  tieneEncuesta, encuestaDe, encuestaMostrar, encuestaRevelar, encuestaStrike, encuestaOcultar, encuestaQuitarStrike, encuestaReiniciar,
+  tienePassword, palabrasDe, pwRondaTerminada, pwAciertos, pwTerminado, pwGanaPrimero,
+  passwordEmpezar, passwordIniciar, passwordPausar, passwordMarcar, passwordDeshacer, passwordSiguiente, passwordReiniciar, alternarPassword
 } from './estado.js';
+import { relojPasswordHtml, tickPassword } from './password.js';
 import * as sync from './sync.js';
 import { renderRuleta, estaGirando, marcarFase } from './ruleta.js';
 import { etiquetaReloj, relojHtml, tickReloj, prepararAudio, sonido } from './reloj.js';
@@ -196,6 +199,7 @@ function renderPantalla() {
   renderNombresPantalla();
   const dd = estado.dobleONada;
   avisosEncuesta(estado.minijuegoLibre || (dd && dd.fase === 'jugando' ? dd : null));
+  avisosPassword(estado.minijuegoLibre || (dd && dd.fase === 'jugando' ? dd : null));
 }
 
 function platosHtml(v) {
@@ -373,6 +377,98 @@ function avisosEncuesta(d) {
   encuestaVista = { clave, strikes: x.strikes, n, fin: x.fin };
 }
 
+/* ---------- Password ---------- */
+function marcadorPassword(p) {
+  const a = pwAciertos(p);
+  return `<div class="pw-marcador">${[0, 1].map(r => `<div class="pw-equipo${p.ronda === r && !pwTerminado(p) ? ' activo' : ''}" style="${estiloEquipo(p.equipos[r])}">
+      <span class="pw-rotulo">${r === 0 ? 'Va por el doble' : 'Retador'}</span>
+      <span class="pw-nombre">${htmlEquipo(p.equipos[r])}</span>
+      <span class="pw-cuenta">${a[r]}</span>
+    </div>`).join('')}</div>`;
+}
+function resultadoPassword(p) {
+  return pwGanaPrimero(p)
+    ? `¡${htmlEquipo(p.equipos[0])} iguala o supera: gana el reto!`
+    : `¡${htmlEquipo(p.equipos[1])} adivinó más: lo detiene!`;
+}
+/* Proyector: la palabra en grande mientras corre el tiempo (quien adivina le da la espalda) */
+function passwordPantallaHtml(d, lema) {
+  const p = d.password, palabras = palabrasDe(d.casilla), eq = p.equipos[p.ronda];
+  const a = pwAciertos(p);
+  let centro;
+  if (pwTerminado(p)) {
+    centro = `<p class="pw-fin">${resultadoPassword(p)}</p>`;
+  } else if (pwRondaTerminada(p)) {
+    centro = `<p class="pw-aviso">¡Tiempo! ${htmlEquipo(eq)} adivinó ${a[p.ronda]} ${a[p.ronda] === 1 ? 'palabra' : 'palabras'}.</p>
+      <p class="reloj-estado">Sigue ${htmlEquipo(p.equipos[1])}: que pase su pareja.</p>`;
+  } else if (p.estado === 'listo') {
+    centro = `<p class="pw-aviso">Turno de ${htmlEquipo(eq)}</p>
+      <p class="reloj-estado">45 segundos. Quien adivina, de espaldas a la pantalla.</p>`;
+  } else if (p.estado === 'detenido') {
+    centro = `${relojPasswordHtml(p, 'pw-reloj')}<p class="pw-aviso">Pausa</p>`;
+  } else {
+    centro = `${relojPasswordHtml(p, 'pw-reloj')}
+      <p class="pw-palabra">${esc(palabras[p.indice] || '')}</p>`;
+  }
+  return `<p class="reloj-titulo" style="--juego:#00A3AD"><span class="emoji" aria-hidden="true">🔑</span> Password</p>
+    ${marcadorPassword(p)}
+    ${centro}
+    ${lema}
+    ${avisoAudio}`;
+}
+function botonesPasswordPantalla(d) {
+  const p = d.password;
+  const btn = (accion, t) => `<button type="button" class="btn-escenario" data-accion="${accion}">${t}</button>`;
+  if (!p) return btn('pw-empezar', 'Empezar Password <kbd>Espacio</kbd>');
+  if (pwTerminado(p)) return '';
+  if (pwRondaTerminada(p)) return btn('pw-siguiente', 'Siguiente equipo <kbd>Espacio</kbd>');
+  if (p.estado === 'listo') return btn('pw-iniciar', 'Iniciar 45 segundos <kbd>Espacio</kbd>');
+  if (p.estado === 'detenido') return btn('pw-iniciar', 'Continuar <kbd>Espacio</kbd>');
+  return btn('pw-si', 'Adivinó <kbd>A</kbd>') + btn('pw-no', 'No adivinó <kbd>N</kbd>') + btn('pw-pausar', 'Pausar <kbd>Espacio</kbd>');
+}
+function passwordControlHtml(d) {
+  const p = d.password, palabras = palabrasDe(d.casilla);
+  const btn = (accion, t, clase = '') => `<button type="button" class="btn${clase ? ' ' + clase : ''}" data-accion="${accion}">${t}</button>`;
+  if (!p) {
+    return `<div class="ctl-bomba">
+      <p class="ctl-nota">${palabras.length} palabras. Empieza ${htmlEquipo(d.equipo === 0 || d.equipo === 1 ? d.equipo : juego.estado.turno)}${d.equipo === 0 || d.equipo === 1 ? ', que va por el doble' : ''}.</p>
+      <div class="ctl-bomba-botones">${btn('pw-empezar', 'Empezar Password', 'btn-primario')}</div></div>`;
+  }
+  const corriendo = p.estado === 'corriendo' && !pwRondaTerminada(p);
+  let cuerpo = '', botones = '';
+  if (pwTerminado(p)) {
+    cuerpo = `<p class="ctl-texto">${resultadoPassword(p)}</p>
+      <p class="ctl-nota">${d.equipo === 0 || d.equipo === 1 ? (pwGanaPrimero(p) ? 'Toca “Ganó el reto”.' : 'Toca “Perdió el reto”.') : 'Minijuego libre: no suma puntos.'}</p>`;
+    botones = btn('pw-deshacer', 'Deshacer la última') + btn('pw-reiniciar', 'Reiniciar Password');
+  } else if (pwRondaTerminada(p)) {
+    cuerpo = `<p class="ctl-texto">¡Tiempo! Turno terminado.</p>`;
+    botones = btn('pw-siguiente', p.ronda === 0 ? `Siguiente: ${htmlEquipo(p.equipos[1])}` : '', 'btn-primario') + btn('pw-deshacer', 'Deshacer la última');
+  } else if (p.estado === 'listo') {
+    cuerpo = `<p class="ctl-texto">Turno de ${htmlEquipo(p.equipos[p.ronda])}: que pase su pareja.</p>`;
+    botones = btn('pw-iniciar', 'Iniciar 45 segundos', 'btn-primario');
+  } else {
+    cuerpo = `<div class="pw-ctl-reloj">${relojPasswordHtml(p, 'ctl-reloj-cara')}
+        <p class="pw-ctl-palabra">${p.estado === 'detenido' ? 'Pausa' : esc(palabras[p.indice] || '—')}</p></div>`;
+    botones = corriendo
+      ? `<div class="pw-ctl-marcar">${btn('pw-si', '✓ Adivinó', 'pw-si')}${btn('pw-no', '✗ No adivinó', 'pw-no')}</div>` + btn('pw-pausar', 'Pausar') + btn('pw-deshacer', 'Deshacer la última')
+      : btn('pw-iniciar', 'Continuar', 'btn-primario') + btn('pw-deshacer', 'Deshacer la última');
+  }
+  const ultimas = p.marcas[p.ronda].map((si, i) => ({ si, palabra: palabras[p.marcas[0].length * p.ronda + i] })).slice(-6).reverse();
+  const lista = ultimas.length ? `<ul class="pw-ultimas">${ultimas.map(u => `<li class="${u.si ? 'si' : 'no'}">${u.si ? '✓' : '✗'} ${esc(u.palabra || '')}</li>`).join('')}</ul>` : '';
+  return `<div class="ctl-bomba">${marcadorPassword(p)}${cuerpo}<div class="ctl-bomba-botones">${botones}</div>${lista}</div>`;
+}
+/* Sonido en el proyector al marcar cada palabra */
+let passwordVisto = null;
+function avisosPassword(d) {
+  const p = d && tienePassword(d) ? d.password : null;
+  if (!p) { passwordVisto = null; return; }
+  const n = p.marcas[0].length + p.marcas[1].length, clave = d.casilla;
+  if (passwordVisto && passwordVisto.clave === clave && n > passwordVisto.n && vistaActual() === 'pantalla') {
+    sonido(p.marcas[p.ronda][p.marcas[p.ronda].length - 1] ? 'acierto' : 'paso');
+  }
+  passwordVisto = { clave, n };
+}
+
 /* Lo que dice el proyector del reto. En 100 Mexicanos solo las reglas: la pregunta sale en el video. */
 function instruccionesPantalla(id) {
   const { juego: mj } = infoCasilla(id);
@@ -433,6 +529,8 @@ function renderLibre() {
     cuerpo = bombaPantallaHtml(L, '');
   } else if (conEncuesta && L.encuesta) {
     cuerpo = encuestaPantallaHtml(L, '');
+  } else if (tienePassword(L) && L.password) {
+    cuerpo = passwordPantallaHtml(L, '');
   } else if (conReloj && r.estado !== 'listo') {
     cuerpo = `<p class="reloj-titulo" style="--juego:${mj.color}"><span class="emoji" aria-hidden="true">${mj.emoji}</span> ${esc(nombreReto || mj.nombre)}</p>
       ${relojHtml(L, 'reloj-cara')}
@@ -446,7 +544,7 @@ function renderLibre() {
   }
   const cu = $('#libre-cuerpo');
   if (cuerpo !== libreHtmlPrevio) { cu.innerHTML = cuerpo; libreHtmlPrevio = cuerpo; animarRuedasBomba(); }
-  $('#libre-controles').innerHTML = (conReloj && enlaceTimer() ? botonTimer() : '') + (enlaceVideo(reto) ? botonVideo(enlaceVideo(reto)) : '') + (conReloj ? botonesRelojPantalla(L) : '') + (conBomba ? botonesBombaPantalla(L) : '') + (conEncuesta ? botonesEncuestaPantalla(L) : '') +
+  $('#libre-controles').innerHTML = (conReloj && enlaceTimer() ? botonTimer() : '') + (enlaceVideo(reto) ? botonVideo(enlaceVideo(reto)) : '') + (conReloj ? botonesRelojPantalla(L) : '') + (conBomba ? botonesBombaPantalla(L) : '') + (conEncuesta ? botonesEncuestaPantalla(L) : '') + (tienePassword(L) ? botonesPasswordPantalla(L) : '') +
     '<button type="button" class="btn-escenario" data-accion="libre-cerrar">Cerrar <kbd>Esc</kbd></button>';
   ov.hidden = false;
 }
@@ -481,8 +579,10 @@ function renderDobleONada() {
     const modoBombaVisible = conBomba && !!bombaDe(d).modo;
     const conEncuesta = revelado && tieneEncuesta(d);
     const modoEncuesta = conEncuesta && !!d.encuesta;
-    $('#don-ruleta').hidden = modoReloj || modoBombaVisible || modoEncuesta;
-    $('#don-reloj').hidden = !(modoReloj || modoBombaVisible || modoEncuesta);
+    const conPassword = revelado && tienePassword(d);
+    const modoPassword = conPassword && !!d.password;
+    $('#don-ruleta').hidden = modoReloj || modoBombaVisible || modoEncuesta || modoPassword;
+    $('#don-reloj').hidden = !(modoReloj || modoBombaVisible || modoEncuesta || modoPassword);
     let lado;
     if (revelado) {
       const { juego: mj } = infoCasilla(d.casilla);
@@ -508,6 +608,14 @@ function renderDobleONada() {
           const ze = $('#don-reloj');
           const he = encuestaPantallaHtml(d, `<p class="don-lema reloj-lema">${htmlEquipo(d.equipo)} se juega ${NUM.format(v)} puntos.</p>`);
           if (ze.dataset.html !== he) { ze.innerHTML = he; ze.dataset.html = he; }
+        }
+      }
+      if (conPassword) {
+        botones = botonesPasswordPantalla(d) + botones;
+        if (modoPassword) {
+          const zp = $('#don-reloj');
+          const hp = passwordPantallaHtml(d, `<p class="don-lema reloj-lema">${htmlEquipo(d.equipo)} se juega ${NUM.format(v)} puntos.</p>`);
+          if (zp.dataset.html !== hp) { zp.innerHTML = hp; zp.dataset.html = hp; }
         }
       }
       if (enlaceVideo(reto)) botones = botonVideo(enlaceVideo(reto)) + botones;
@@ -649,6 +757,7 @@ function renderControlLibre(L) {
   if (tieneReloj(L)) h += controlRelojHtml(L);
   if (tieneBomba(L)) h += bombaControlHtml(L);
   if (tieneEncuesta(L)) h += encuestaControlHtml(L);
+  if (tienePassword(L)) h += passwordControlHtml(L);
   h += '<button type="button" class="btn btn-primario" data-accion="libre-cerrar">Cerrar minijuego</button>';
   $('#ctl-libre').innerHTML = h;
 }
@@ -687,6 +796,7 @@ function renderControlDoble(d) {
       if (tieneReloj(d)) h += controlRelojHtml(d);
       if (tieneBomba(d)) h += bombaControlHtml(d);
       if (tieneEncuesta(d)) h += encuestaControlHtml(d);
+      if (tienePassword(d)) h += passwordControlHtml(d);
     } else {
       h += `<p class="ctl-texto">${htmlEquipo(d.equipo)} se juega ${NUM.format(v)} puntos.</p>
       <p class="ctl-nota">Ya no quedan casillas en la ruleta: elijan un minijuego y marca el resultado.</p>`;
@@ -802,6 +912,7 @@ function renderEditor() {
           <textarea rows="2" maxlength="400" data-campo="reto-instrucciones" data-j="${j}" data-n="${x}" placeholder="Instrucciones: qué hay que hacer para ganar" aria-label="Instrucciones del ${et}">${esc(r.instrucciones)}</textarea>
           <input type="text" maxlength="160" data-campo="reto-material" data-j="${j}" data-n="${x}" placeholder="Material" aria-label="Material del ${et}" value="${esc(r.material)}">
           <input type="url" maxlength="300" data-campo="reto-video" data-j="${j}" data-n="${x}" placeholder="${m.encuesta ? 'Video con la pregunta (YouTube, con el minuto: …&t=182s)' : 'Enlace del video de explicación (YouTube)'}" aria-label="Video del ${et}" value="${esc(r.video)}">
+          ${m.password ? `<textarea rows="5" data-campo="reto-palabras" data-j="${j}" data-n="${x}" placeholder="Palabras, una por línea" aria-label="Palabras del ${et}">${esc(r.palabras)}</textarea>` : ''}
           ${m.encuesta ? `<p class="enc-edit-nota">Tablero en orden, de la más popular a la menos. Las 3 primeras son las que hay que encontrar.</p>
           <div class="enc-edit">${[...Array(MAX_RESPUESTAS).keys()].map(k => `<div class="enc-edit-fila${k < 3 ? ' objetivo' : ''}">
               <span>${k + 1}</span>
@@ -855,6 +966,7 @@ document.addEventListener('input', e => {
     case 'reto-video': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].video = v; break;
     case 'video-temporizador': nc.videoTemporizador = v; break;
     case 'silabas-respaldo': nc.silabasRespaldo = v; break;
+    case 'reto-palabras': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].palabras = v; break;
     case 'reto-respuesta': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].respuestas[+el.dataset.k].texto = v; break;
     case 'reto-puntos': nc.minijuegos[+el.dataset.j].retos[+el.dataset.n].respuestas[+el.dataset.k].puntos = Number(v) || 0; break;
     default: return;
@@ -895,6 +1007,14 @@ document.addEventListener('click', e => {
     case 'reloj-detener': relojAccion('detener'); break;
     case 'reloj-reiniciar': relojAccion('reiniciar'); break;
     case 'probar-sonido': prepararAudio(); setTimeout(() => sonido('inicio'), 60); break;
+    case 'pw-empezar': passwordEmpezar(); break;
+    case 'pw-iniciar': passwordIniciar(); break;
+    case 'pw-pausar': passwordPausar(); break;
+    case 'pw-si': passwordMarcar(true); break;
+    case 'pw-no': passwordMarcar(false); break;
+    case 'pw-deshacer': passwordDeshacer(); break;
+    case 'pw-siguiente': passwordSiguiente(); break;
+    case 'pw-reiniciar': passwordReiniciar(); break;
     case 'enc-mostrar': encuestaMostrar(); break;
     case 'enc-revelar': encuestaRevelar(+b.dataset.k); break;
     case 'enc-ocultar': encuestaOcultar(+b.dataset.k); break;
@@ -936,6 +1056,12 @@ document.addEventListener('keydown', e => {
   if (estado.eligiendoNombres) { if (k === 'Escape') cerrarNombres(); return; }
   /* 100 Mexicanos: Espacio muestra el tablero, 1-3 destapan, X marca strike */
   const activo = estado.minijuegoLibre || (estado.dobleONada && estado.dobleONada.fase === 'jugando' ? estado.dobleONada : null);
+  /* Password: Espacio empieza / inicia / pausa / siguiente equipo; A adivinó, N no adivinó */
+  if (tienePassword(activo) && !estaGirando()) {
+    if (k === ' ') { e.preventDefault(); alternarPassword(); return; }
+    if (activo.password && (k === 'a' || k === 'A')) { passwordMarcar(true); return; }
+    if (activo.password && (k === 'n' || k === 'N')) { passwordMarcar(false); return; }
+  }
   if (tieneEncuesta(activo) && !estaGirando()) {
     if (k === ' ' && !activo.encuesta) { e.preventDefault(); encuestaMostrar(); return; }
     if (activo.encuesta && /^[1-8]$/.test(k)) { const lugar = lugaresTablero(activo)[+k - 1]; if (lugar !== undefined) encuestaRevelar(lugar); return; }
@@ -986,6 +1112,7 @@ document.addEventListener('fullscreenchange', () => {
 /* ---------- Arranque ---------- */
 setInterval(() => tickReloj(vistaActual() === 'pantalla', render), 100);
 setInterval(() => tickBomba(vistaActual() === 'pantalla', render), 40);
+setInterval(() => tickPassword(vistaActual() === 'pantalla', render), 100);
 window.addEventListener('hashchange', render);
 render();
 sync.iniciar({

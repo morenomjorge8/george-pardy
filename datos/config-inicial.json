@@ -204,20 +204,23 @@
       "retos": [
         {
           "instrucciones": "",
-          "material": "",
-          "nombre": "",
+          "material": "Grupo 1 (fácil). Marca palabra por palabra en el control.",
+          "nombre": "Grupo 1",
+          "palabras": "Elefante\nEspejo\nPlaya\nChocolate\nHospital\nMontaña\nZapato\nPirata\nVolcán\nBiblioteca\nDinosaurio\nParaguas\nAeropuerto\nFantasma\nRefrigerador\nDesierto\nMariposa\nCastillo\nSemáforo\nCocodrilo\nHelicóptero\nPayaso\nTesoro\nAlmohada\nTiburón\nEscalera\nAstronauta\nSandía\nLaberinto\nBombero\nTornado\nCorona\nPingüino",
           "video": ""
         },
         {
           "instrucciones": "",
-          "material": "",
-          "nombre": "",
+          "material": "Grupo 2 (medio). Marca palabra por palabra en el control.",
+          "nombre": "Grupo 2",
+          "palabras": "Murciélago\nBrújula\nEclipse\nDetective\nCarnaval\nCamaleón\nMicroscopio\nAvalancha\nEsqueleto\nSubmarino\nTelescopio\nMomia\nTrampolín\nAcuario\nOrquesta\nMeteorito\nPrisión\nEscorpión\nHipnosis\nBumerán\nEsmeralda\nGladiador\nInvernadero\nParacaídas\nNaufragio\nAntídoto\nJeroglífico\nCanguro\nTerremoto\nContrabando\nSirena\nCamuflaje\nAlquimista",
           "video": ""
         },
         {
           "instrucciones": "",
-          "material": "",
-          "nombre": "",
+          "material": "Grupo 3 (difícil). Marca palabra por palabra en el control.",
+          "nombre": "Grupo 3",
+          "palabras": "Nostalgia\nParadoja\nConspiración\nDiplomacia\nSabotaje\nMetamorfosis\nChantaje\nImpunidad\nProfecía\nAnarquía\nCoartada\nTraición\nInmunidad\nHerejía\nExtorsión\nSoberanía\nCatástrofe\nEscepticismo\nUtopía\nAmbigüedad\nJuramento\nIronía\nClandestino\nResiliencia\nDilema\nFalsificación\nEuforia\nExilio\nLegado\nVulnerabilidad\nManipulación\nConvergencia\nTrascendencia",
           "video": ""
         }
       ]

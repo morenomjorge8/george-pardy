@@ -225,6 +225,21 @@ button.casilla:hover{background:var(--tile-hover)}
 .ttb-boom-texto{margin:0;font-family:var(--display);color:#FF6A13;font-size:clamp(3rem,16vmin,12rem);line-height:1;text-shadow:0 .06em 0 var(--rosa)}
 .doble:has(.ttb-explosion){animation:ttb-destello 1s ease-out}
 @keyframes ttb-destello{0%{background:#FFF4D6}25%{background:#FF6A13}100%{background:var(--stage-deep)}}
+/* Password en el proyector */
+.pw-marcador{display:flex;gap:2vmin;justify-content:center;flex-wrap:wrap}
+.pw-equipo{display:grid;grid-template-columns:auto auto;align-items:center;gap:.2vmin 2vmin;padding:1vmin 2.4vmin;border-radius:1.4vmin;border:.4vmin solid var(--equipo);background:var(--stage);opacity:.65}
+.pw-equipo.activo{opacity:1;box-shadow:0 0 0 .4vmin var(--equipo),0 0 3vmin color-mix(in srgb,var(--equipo) 50%,transparent)}
+.pw-rotulo{grid-column:1;font-size:clamp(.7rem,1.8vmin,1.2rem);font-weight:700;color:var(--papel-suave);text-transform:uppercase;letter-spacing:.05em}
+.pw-nombre{grid-column:1;font-weight:800;font-size:clamp(.9rem,3vmin,2.2rem)}
+.pw-cuenta{grid-column:2;grid-row:1/3;font-family:var(--display);font-size:clamp(2rem,9vmin,6.5rem);line-height:1;color:var(--oro)}
+.pw-reloj{position:relative;width:min(20vmin,30vw);aspect-ratio:1/1}
+.pw-reloj svg{width:100%;height:100%;display:block;transform:rotate(-90deg)}
+.pw-reloj .reloj-num{font-size:clamp(1.8rem,8vmin,6rem);color:var(--papel)}
+.pw-reloj.urgente .reloj-num{animation:latido 1s ease-in-out infinite}
+.pw-palabra{margin:0;max-width:90vw;font-family:var(--display);font-size:clamp(3rem,15vmin,12rem);line-height:1;color:var(--papel);text-shadow:0 .06em 0 var(--turquesa);overflow-wrap:anywhere;animation:golpe .3s cubic-bezier(.2,.9,.3,1.3)}
+.pw-aviso{margin:0;font-family:var(--display);font-size:clamp(1.6rem,7vmin,5rem);line-height:1.1;color:var(--oro);text-wrap:balance}
+.pw-fin{margin:0;max-width:24ch;font-family:var(--display);font-size:clamp(1.6rem,7vmin,5.2rem);line-height:1.1;color:var(--oro);text-shadow:0 .06em 0 var(--rosa);text-wrap:balance;animation:golpe .5s cubic-bezier(.2,.9,.3,1.3)}
+
 /* 100 Mexicanos en el proyector */
 .enc-tablero{list-style:none;margin:0;padding:1.4vmin;display:grid;grid-auto-flow:column;grid-template-rows:repeat(var(--filas),9.5vmin);grid-template-columns:repeat(var(--cols),minmax(0,1fr));gap:1vmin 1.4vmin;width:min(var(--cols) * 52vmin,92vw);background:var(--stage-deep);border:.6vmin solid #00A3E0;border-radius:2vmin;box-shadow:0 0 0 .5vmin var(--stage),0 0 4vmin rgba(0,163,224,.35)}
 .enc-fila{display:flex;align-items:center;justify-content:center;border-radius:.8vmin;background:linear-gradient(#2638C9,#1B29A6);border:.25vmin solid #6E86FF;overflow:hidden;min-width:0}
@@ -337,6 +352,22 @@ body.con-mouse .auto,.auto:focus-within{opacity:1;pointer-events:auto}
 .ttb-modo-chico{display:inline-block;margin-right:.3rem;padding:.05rem .55rem;border-radius:.4rem;background:var(--modo);color:var(--modo-tinta);font-family:var(--display);font-weight:400}
 .ctl-bomba-botones{display:grid;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));gap:.5rem}
 .ctl-bomba-botones:empty{display:none}
+.ctl-bomba .pw-marcador{gap:.6rem;justify-content:stretch}
+.ctl-bomba .pw-equipo{flex:1;padding:.5rem .8rem;border-radius:.6rem;border-width:3px;background:var(--surface);opacity:.7}
+.ctl-bomba .pw-equipo.activo{opacity:1;box-shadow:none}
+.ctl-bomba .pw-rotulo{font-size:.7rem;color:var(--muted)}
+.ctl-bomba .pw-nombre{font-size:1rem}
+.ctl-bomba .pw-cuenta{font-size:2.2rem;color:var(--ink)}
+.pw-ctl-reloj{display:flex;align-items:center;gap:1rem}
+.pw-ctl-palabra{margin:0;font-family:var(--display);font-size:1.9rem;line-height:1.1;overflow-wrap:anywhere}
+.pw-ctl-marcar{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.btn.pw-si,.btn.pw-no{min-height:4.2rem;font-size:1.25rem;font-weight:800;border:0}
+.btn.pw-si{background:var(--verde);color:#fff}
+.btn.pw-no{background:#E8202A;color:#fff}
+.pw-ultimas{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.35rem}
+.pw-ultimas li{padding:.2rem .6rem;border-radius:999px;font-size:.9rem;font-weight:600;background:var(--surface)}
+.pw-ultimas li.si{color:var(--verde)}
+.pw-ultimas li.no{color:#E8202A}
 .enc-ctl{list-style:none;margin:0;padding:0;display:grid;gap:.45rem}
 .enc-ctl-fila{display:grid;grid-template-columns:2rem 1fr auto;align-items:center;gap:.6rem;padding:.35rem .5rem;border-radius:.55rem;background:var(--surface)}
 .enc-ctl-fila b{font-family:var(--display);font-weight:400;color:var(--accent);text-align:center}

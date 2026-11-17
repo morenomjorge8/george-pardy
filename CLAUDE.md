@@ -102,6 +102,13 @@ Cada reto tiene `nombre`, `instrucciones` (se ven en el proyector), `material` (
 
 Retos ya definidos (Minuto para Ganar): 1 A Bit Dicey, 2 Face the Cookie, 3 Ligas vs Cartas. Están en `datos/config-inicial.json`.
 
+### Password
+- Pasa una pareja por equipo: uno da pistas y el otro adivina, **de espaldas al proyector**, donde aparece la palabra en grande. Cada turno dura **45 s**. Empieza el equipo que va por el doble (en el minijuego libre, el que tiene el turno); el retador sigue con las palabras siguientes, sin repetir.
+- El moderador marca palabra por palabra en el iPad: "Adivinó" o "No adivinó" (en el proyector: A / N). Solo cuentan las adivinadas. Hay pausa y "Deshacer la última".
+- **Si el equipo que va por el doble iguala o supera al retador, gana el reto**; si el retador adivina más, lo detiene (el equipo se lleva 0 en esa pregunta). El moderador confirma con Ganó / Perdió.
+- Cada reto tiene `palabras` (una por línea). Retos actuales: Grupo 1 (fácil), Grupo 2 (medio), Grupo 3 (difícil), 33 palabras cada uno.
+- Estado: `password: null | { equipos: [doble, retador], ronda: 0|1, estado: listo|corriendo|detenido|terminada, inicioEn, restanteMs, indice, marcas: [[bool…], [bool…]] }`.
+
 ### 100 Mexicanos Dijeron
 - Cada reto es una pregunta del programa: `video` es el enlace de YouTube con el minuto donde empieza la pregunta (`&t=…s`), `instrucciones` lleva la pregunta y `respuestas` el **tablero completo** en orden (hasta 8 `{ texto, puntos }`).
 - **Gana** el equipo que destapa las **3 primeras** (las más populares) **antes de juntar 3 strikes**. Una respuesta que está en el tablero pero no es de las 3 se destapa sin strike y sin ganar. **Strike solo si la respuesta no está en el tablero.** Con 3 strikes pierde.
@@ -258,7 +265,7 @@ Después de cada paso, abre la página localmente (por ejemplo con `npx serve` o
 ## 11. Pendientes del plan (no inventar; preguntar al usuario)
 
 - ~~Escribir las 20 preguntas definitivas.~~ Listas (Harry Potter se queda con las de prueba, a petición del usuario).
-- Definir la condición de victoria de Password. (Tic-Tac-Boom y 100 Mexicanos ya están definidos.)
+- Escribir los retos de Atínale al Precio y Completa la Canción (Tic-Tac-Boom, 100 Mexicanos, Minuto y Password ya están definidos).
 - Escribir los retos de los otros cinco minijuegos (15 en total).
 - Ligas vs Cartas: cuántas cartas y a qué distancia se dispara.
 - Opción pendiente de decidir: poder elegir el reto a mano durante un Doble o Nada en lugar de girar.

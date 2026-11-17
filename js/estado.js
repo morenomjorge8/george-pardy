@@ -25,7 +25,7 @@ export const MINIJUEGOS = [
   { nombre: '100 Mexicanos Dijeron', corto: '100 Mexicanos', emoji: '💯', color: '#E4007C', tinta: '#FFFFFF', desc: 'Vean la pregunta en el video. Ganan si encuentran las 3 respuestas más populares antes de juntar 3 strikes; una respuesta que no está en el tablero es strike.', encuesta: true },
   { nombre: 'Tic-Tac-Boom', corto: 'Tic-Tac-Boom', emoji: '💣', color: '#FF6A13', tinta: '#12163A', desc: 'Pasan 4 personas al frente, 2 de cada equipo. La ruleta dice TIC (la palabra empieza con la sílaba), TAC (la tiene en cualquier parte) o BOOM (termina con ella). Al iniciar aparece la sílaba: pásense la pelota por turnos diciendo una palabra. Pierde quien tenga la pelota cuando explote la bomba.', bomba: true },
   { nombre: 'Minuto para Ganar', corto: 'Minuto', emoji: '⏱️', color: '#FFB81C', tinta: '#12163A', desc: 'Completen el reto en 60 segundos.', segundos: 60 },
-  { nombre: 'Password', corto: 'Password', emoji: '🔑', color: '#00A3AD', tinta: '#04232A', desc: 'Adivinen la palabra con las pistas de sus compañeros.' },
+  { nombre: 'Password', corto: 'Password', emoji: '🔑', color: '#00A3AD', tinta: '#04232A', desc: 'Pasa una pareja por equipo: uno da pistas y el otro adivina todas las palabras que pueda en 45 segundos. Empieza el equipo que va por el doble; si iguala o supera al rival, gana el reto.', password: true },
   { nombre: 'Atínale al Precio', corto: 'Atínale', emoji: '🏷️', color: '#22A35A', tinta: '#072A16', desc: 'Los dos equipos adivinan el precio. Si queda más cerca el equipo que va por el doble, gana; si queda más cerca el que va ganando, se lo impide.' },
   { nombre: 'Completa la Canción', corto: 'Canción', emoji: '🎤', color: '#7B3FD6', tinta: '#FFFFFF', desc: 'Elijan a un participante y uno de los 2 artistas. Si sigue la letra 10 segundos cuando desaparezca, ganan.' }
 ];
@@ -86,7 +86,7 @@ export function configBase() {
       nombre,
       preguntas: VALORES.map(() => ({ pregunta: '', respuesta: '' }))
     })),
-    minijuegos: MINIJUEGOS.map(() => ({ retos: [0, 1, 2].map(() => ({ nombre: '', instrucciones: '', material: '', video: '', respuestas: respuestasVacias() })) })),
+    minijuegos: MINIJUEGOS.map(() => ({ retos: [0, 1, 2].map(() => ({ nombre: '', instrucciones: '', material: '', video: '', respuestas: respuestasVacias(), palabras: '' })) })),
     videoTemporizador: '',
     videoTemporizadorInicio: 0,
     usarTimerYoutube: false,
@@ -118,6 +118,23 @@ function normalizarRespuestas(v) {
     if (typeof r === 'string') return { texto: r, puntos: 0 };
     return { texto: texto(r && r.texto), puntos: r && Number.isFinite(r.puntos) ? Math.max(0, Math.min(100, Math.round(r.puntos))) : 0 };
   });
+}
+/* Password: dos turnos de 45 s; marcas[ronda] = true (adivinó) / false (no) por palabra */
+export const PASSWORD_MS = 45000;
+export function normalizarPassword(p) {
+  if (!p || typeof p !== 'object') return null;
+  const eq = comoArreglo(p.equipos) || [];
+  const primero = eq[0] === 1 ? 1 : 0;
+  const marcas = comoArreglo(p.marcas) || [];
+  return {
+    equipos: [primero, 1 - primero],
+    ronda: p.ronda === 1 ? 1 : 0,
+    estado: ['corriendo', 'detenido', 'terminada'].includes(p.estado) ? p.estado : 'listo',
+    inicioEn: Number.isFinite(p.inicioEn) ? p.inicioEn : 0,
+    restanteMs: Number.isFinite(p.restanteMs) ? Math.max(0, Math.min(PASSWORD_MS, p.restanteMs)) : PASSWORD_MS,
+    indice: Number.isInteger(p.indice) && p.indice >= 0 ? p.indice : 0,
+    marcas: [0, 1].map(k => (comoArreglo(marcas[k]) || []).map(v => v === true))
+  };
 }
 /* Qué respuestas ya salieron, cuántos strikes y cómo terminó */
 export function normalizarEncuesta(x) {
@@ -175,7 +192,8 @@ export function normalizarConfig(raw) {
         const rr = retos[x];
         return {
           nombre: texto(rr && rr.nombre), instrucciones: texto(rr && rr.instrucciones), material: texto(rr && rr.material), video: texto(rr && rr.video),
-          respuestas: normalizarRespuestas(rr && rr.respuestas)
+          respuestas: normalizarRespuestas(rr && rr.respuestas),
+          palabras: texto(rr && rr.palabras)
         };
       }) };
     });
@@ -210,11 +228,12 @@ export function normalizarEstado(raw) {
       giroEn: Number.isFinite(d.giroEn) ? d.giroEn : 0,
       reloj: normalizarReloj(d.reloj),
       bomba: normalizarBomba(d.bomba),
-      encuesta: normalizarEncuesta(d.encuesta)
+      encuesta: normalizarEncuesta(d.encuesta),
+      password: normalizarPassword(d.password)
     };
   }
   const L = raw.minijuegoLibre;
-  if (L && CASILLAS.includes(L.casilla)) e.minijuegoLibre = { casilla: L.casilla, reloj: normalizarReloj(L.reloj), bomba: normalizarBomba(L.bomba), encuesta: normalizarEncuesta(L.encuesta) };
+  if (L && CASILLAS.includes(L.casilla)) e.minijuegoLibre = { casilla: L.casilla, reloj: normalizarReloj(L.reloj), bomba: normalizarBomba(L.bomba), encuesta: normalizarEncuesta(L.encuesta), password: normalizarPassword(L.password) };
   if (raw.eligiendoNombres && typeof raw.eligiendoNombres === 'object') e.eligiendoNombres = { turno: raw.eligiendoNombres.turno === 1 ? 1 : 0 };
   const v = raw.video;
   if (v && enlaceValido(v.url)) {
@@ -376,7 +395,7 @@ export function girar() {
   cambiarEstado({
     ...e,
     ruletaUsadas: [...e.ruletaUsadas, id],
-    dobleONada: { ...d, fase: 'jugando', casilla: id, desfase: Math.random() * 0.7 - 0.35, giroEn: ahora(), reloj: null, bomba: null, encuesta: null }
+    dobleONada: { ...d, fase: 'jugando', casilla: id, desfase: Math.random() * 0.7 - 0.35, giroEn: ahora(), reloj: null, bomba: null, encuesta: null, password: null }
   });
 }
 export function resultadoDoble(gano) {
@@ -522,11 +541,87 @@ export function encuestaQuitarStrike() {
 }
 export function encuestaReiniciar() { cambiarEncuesta(() => encuestaBase()); }
 
+/* ---------- Password ---------- */
+export const tienePassword = d => !!(d && d.casilla && infoCasilla(d.casilla).juego.password);
+/* Las palabras del reto: una por línea o separadas por coma; se quita la numeración "1." */
+export const palabrasDe = id => retoDe(id).palabras.split(/\n|,/).map(s => s.replace(/^\s*\d+\s*[.)-]?\s*/, '').trim()).filter(Boolean);
+export const pwRondaTerminada = p => p.estado === 'terminada' || (p.estado === 'corriendo' && restanteMs(p) <= 0);
+export const pwAciertos = p => p.marcas.map(m => m.filter(Boolean).length);
+export const pwTerminado = p => p.ronda === 1 && pwRondaTerminada(p);
+/* El equipo que va por el doble gana si iguala o supera al rival */
+export const pwGanaPrimero = p => { const a = pwAciertos(p); return a[0] >= a[1]; };
+function cambiarPassword(f) {
+  const d = juegoConReloj();
+  if (!tienePassword(d) || !d.password) return;
+  const p = d.password;
+  const n = f({ ...p, equipos: [...p.equipos], marcas: [[...p.marcas[0]], [...p.marcas[1]]] }, d);
+  if (n) cambiarJuegoActivo({ ...d, password: n });
+}
+/* Prepara el juego: el primer turno es del equipo que va por el doble (en el libre, el que tiene el turno) */
+export function passwordEmpezar() {
+  const d = juegoConReloj();
+  if (!tienePassword(d) || d.password) return;
+  const primero = d.equipo === 0 || d.equipo === 1 ? d.equipo : E().turno;
+  cambiarJuegoActivo({ ...d, password: normalizarPassword({ equipos: [primero, 1 - primero] }) });
+}
+export function passwordIniciar() {
+  cambiarPassword(p => {
+    if (p.estado === 'listo') return { ...p, estado: 'corriendo', inicioEn: ahora(), restanteMs: PASSWORD_MS };
+    if (p.estado === 'detenido') return { ...p, estado: 'corriendo', inicioEn: ahora() };
+    return null;
+  });
+}
+export function passwordPausar() {
+  cambiarPassword(p => {
+    const ms = restanteMs(p);
+    if (p.estado !== 'corriendo' || ms <= 0) return null;
+    return { ...p, estado: 'detenido', inicioEn: 0, restanteMs: ms };
+  });
+}
+/* Palabra por palabra mientras corre el tiempo; si se acaban las palabras, termina el turno */
+export function passwordMarcar(adivino) {
+  cambiarPassword((p, d) => {
+    const ms = restanteMs(p), total = palabrasDe(d.casilla).length;
+    if (p.estado !== 'corriendo' || ms <= 0 || p.indice >= total) return null;
+    p.marcas[p.ronda].push(!!adivino);
+    p.indice++;
+    if (p.indice >= total) return { ...p, estado: 'terminada', inicioEn: 0, restanteMs: ms };
+    return p;
+  });
+}
+/* Corregir la última marca del turno */
+export function passwordDeshacer() {
+  cambiarPassword(p => {
+    if (!p.marcas[p.ronda].length) return null;
+    p.marcas[p.ronda].pop();
+    p.indice = Math.max(0, p.indice - 1);
+    if (p.estado === 'terminada') p.estado = p.restanteMs > 0 ? 'detenido' : 'terminada';
+    return p;
+  });
+}
+export function passwordSiguiente() {
+  cambiarPassword(p => (p.ronda === 0 && pwRondaTerminada(p) ? { ...p, ronda: 1, estado: 'listo', inicioEn: 0, restanteMs: PASSWORD_MS } : null));
+}
+export function passwordReiniciar() {
+  const d = juegoConReloj();
+  if (tienePassword(d) && d.password) cambiarJuegoActivo({ ...d, password: null });
+}
+/* Espacio en el proyector: empezar / iniciar / pausar / continuar / siguiente equipo */
+export function alternarPassword() {
+  const d = juegoConReloj();
+  if (!tienePassword(d)) return;
+  const p = d.password;
+  if (!p) return passwordEmpezar();
+  if (p.estado === 'listo' || p.estado === 'detenido') return passwordIniciar();
+  if (p.estado === 'corriendo' && restanteMs(p) > 0) return passwordPausar();
+  if (p.ronda === 0 && pwRondaTerminada(p)) return passwordSiguiente();
+}
+
 /* ---------- Minijuego libre: no suma puntos ni gasta casillas ---------- */
 export function abrirLibre(id) {
   const e = E();
   if (!CASILLAS.includes(id) || e.abierta || e.dobleONada || e.eligiendoNombres) return;
-  cambiarEstado({ ...e, minijuegoLibre: { casilla: id, reloj: null, bomba: null, encuesta: null } });
+  cambiarEstado({ ...e, minijuegoLibre: { casilla: id, reloj: null, bomba: null, encuesta: null, password: null } });
 }
 export function cerrarLibre() {
   if (!E().minijuegoLibre) return;
